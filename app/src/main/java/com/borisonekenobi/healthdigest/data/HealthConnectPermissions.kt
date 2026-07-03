@@ -14,21 +14,24 @@ import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 
 class HealthConnectPermissions(context: Context) : HealthPermissions {
-    private val client = HealthConnectClient.getOrCreate(context)
+    private val client by lazy { HealthConnectClient.getOrCreate(context) }
+    private val permissions = setOf(
+        HealthPermission.getReadPermission(WeightRecord::class),
+        HealthPermission.getReadPermission(NutritionRecord::class),
+        HealthPermission.getReadPermission(HydrationRecord::class),
+        HealthPermission.getReadPermission(StepsRecord::class),
+        HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
+        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
+        HealthPermission.getReadPermission(SleepSessionRecord::class),
+        HealthPermission.getReadPermission(HeartRateRecord::class),
+    )
 
     override fun getPermissions(launcher: ActivityResultLauncher<Set<String>>) {
-        val permissions = setOf(
-            HealthPermission.getReadPermission(WeightRecord::class),
-            HealthPermission.getReadPermission(NutritionRecord::class),
-            HealthPermission.getReadPermission(HydrationRecord::class),
-            HealthPermission.getReadPermission(StepsRecord::class),
-            HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
-            HealthPermission.getReadPermission(ExerciseSessionRecord::class),
-            HealthPermission.getReadPermission(SleepSessionRecord::class),
-            HealthPermission.getReadPermission(HeartRateRecord::class),
-        )
-
         launcher.launch(permissions)
+    }
+
+    override suspend fun hasAllPermissions(): Boolean {
+        return checkPermissions().containsAll(permissions)
     }
 
     override suspend fun hasPermission(healthPermission: String): Boolean {

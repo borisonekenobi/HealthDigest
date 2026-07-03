@@ -1,16 +1,19 @@
 package com.borisonekenobi.healthdigest.model
 
 data class Summary(
-    var hungerLevel: HungerLevel,
+    val hungerLevel: HungerLevel,
+    val hungerLevelComments: String = "",
     val energyLevel: EnergyLevel,
-    val additionalComments: String = ""
+    val energyLevelComments: String = ""
 ) {
     override fun toString(): String {
         return """
             Hunger Level: ${hungerLevel.name}
+            Comments:
+${hungerLevelComments.ifBlank { "N/A" }.prependIndent("            ")}
             Energy Level: ${energyLevel.name}
-            Additional Comments:
-${additionalComments.ifBlank { "N/A" }.prependIndent("            ")}"""
+            Comments:
+${energyLevelComments.ifBlank { "N/A" }.prependIndent("            ")}"""
     }
 }
 

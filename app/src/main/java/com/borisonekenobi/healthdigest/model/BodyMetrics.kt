@@ -1,16 +1,19 @@
 package com.borisonekenobi.healthdigest.model
 
+import androidx.health.connect.client.units.Mass
+
 data class BodyMetrics(
-    val currentWeightKg: Double?,
-    val previousWeightKg: Double?,
-    val weightChangeKg: Double?,
+    val currentWeight: Mass?,
+    val previousWeight: Mass?,
+    val weightChange: Mass?,
     val waistFit: WaistFit?,
+    val units: Units,
 ) {
     override fun toString(): String {
         return """
-            Current Weight: ${currentWeightKg ?: "N/A"} kg
-            Previous Weight: ${previousWeightKg ?: "N/A"} kg
-            Weight Change: ${weightChangeKg ?: "N/A"} kg
+            Current Weight: ${convertBig(currentWeight, units)}
+            Previous Weight: ${convertBig(previousWeight, units)}
+            Weight Change: ${convertBig(weightChange, units)}
             Clothes/Waist Fit: ${waistFit?.name ?: "N/A"}"""
     }
 }

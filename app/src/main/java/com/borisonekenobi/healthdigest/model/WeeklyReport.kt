@@ -1,17 +1,25 @@
 package com.borisonekenobi.healthdigest.model
 
 data class WeeklyReport(
+    val startMessage: String,
     val summary: Summary,
     val body: BodyMetrics,
     val nutrition: Nutrition,
     val activity: Activity,
     val recovery: Recovery,
     val health: Health,
-    val notes: String
+    val notes: String,
+    val endMessage: String,
 ) {
     override fun toString(): String {
+        val sm =if (startMessage == "") ""
+        else "$startMessage\n            \n            "
+
+        val em = if (endMessage == "") ""
+        else "\n            \n            $endMessage"
+
         return """
-            # Weekly Report
+            $sm# Weekly Report
             
             ## Summary
             $summary
@@ -32,7 +40,7 @@ data class WeeklyReport(
             $health
             
             ## Notes
-${notes.ifBlank { "N/A" }.prependIndent("            ")}
+${notes.ifBlank { "N/A" }.prependIndent("            ")}$em
         """.trimIndent()
     }
 }
