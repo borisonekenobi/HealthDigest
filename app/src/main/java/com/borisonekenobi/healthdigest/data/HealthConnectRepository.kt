@@ -6,24 +6,26 @@ import com.borisonekenobi.healthdigest.model.Summary
 import com.borisonekenobi.healthdigest.model.UserData
 import com.borisonekenobi.healthdigest.model.WeeklyReport
 import kotlinx.coroutines.flow.first
-import java.time.LocalDateTime
 
-class HealthConnectRepository(context: Context) : HealthRepository {
-    private val healthConnectSource = HealthConnectSource(context)
+class HealthConnectRepository(private val context: Context) : HealthRepository {
     private val dataStoreSource = DataStoreSource(context)
 
     override suspend fun getWeeklyReport(userData: UserData): WeeklyReport {
         val userPreferences = dataStoreSource.userPreferencesFlow.first()
-        val end = LocalDateTime.now()
-        val start = end.minusDays(7)
+        val healthConnectSource = HealthConnectSource(context, userPreferences.units)
 
         return WeeklyReport(
             startMessage = userPreferences.startMessage,
-            summary = Summary(userData.hungerLevel, userData.hungerLevelComments, userData.energyLevel, userData.energyLevelComments),
-            body = healthConnectSource.getBodyInformation(start, end, userData.waistFit, userPreferences.units),
-            nutrition = healthConnectSource.getNutritionInformation(start, end, userPreferences.units),
-            activity = healthConnectSource.getActivityInformation(start, end, userPreferences.units),
-            recovery = healthConnectSource.getRecoveryInformation(start, end),
+            summary = Summary(
+                userData.hungerLevel,
+                userData.hungerLevelComments,
+                userData.energyLevel,
+                userData.energyLevelComments
+            ),
+            body = healthConnectSource.getBodyInformation(userData.waistFit),
+            nutrition = healthConnectSource.getNutritionInformation(),
+            activity = healthConnectSource.getActivityInformation(),
+            recovery = healthConnectSource.getRecoveryInformation(),
             health = Health(userData.painOrInjury, userData.illness, userData.healthNotes),
             notes = userData.notes,
             endMessage = userPreferences.endMessage

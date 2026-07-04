@@ -28,29 +28,41 @@ import java.time.LocalDateTime
 import java.time.Period
 import kotlin.reflect.KClass
 
-class HealthConnectSource(context: Context) {
+class HealthConnectSource(context: Context, private val units: Units) {
     private val healthConnectManager = HealthConnectManager(context)
     private val healthConnectPermissions = HealthConnectPermissions(context)
 
-    suspend fun getBodyInformation(
-        start: LocalDateTime, end: LocalDateTime, waistFit: WaistFit, units: Units
-    ): BodyMetrics {
+    private val now = LocalDateTime.now()
+    private val today = now.withHour(0).withMinute(0).withSecond(0).withNano(0)
+    private val lastWeek = today.minusDays(7)
+    private val lastLastWeek = today.minusDays(14)
+
+    suspend fun getBodyInformation(waistFit: WaistFit): BodyMetrics {
         if (!hasPermissions(setOf(WeightRecord::class))) {
             return BodyMetrics(
                 null, null, null, null, units
             )
         }
 
-        val response = healthConnectManager.client.aggregateGroupByPeriod(
+        var response = healthConnectManager.client.aggregateGroupByPeriod(
             AggregateGroupByPeriodRequest(
                 metrics = setOf(WeightRecord.WEIGHT_AVG),
-                timeRangeFilter = TimeRangeFilter.between(start, end),
+                timeRangeFilter = TimeRangeFilter.after(today),
                 timeRangeSlicer = Period.ofDays(1),
             )
         )
 
         val currentWeight = response.lastOrNull()?.result?.get(WeightRecord.WEIGHT_AVG)
-        val previousWeight = response.firstOrNull()?.result?.get(WeightRecord.WEIGHT_AVG)
+
+        response = healthConnectManager.client.aggregateGroupByPeriod(
+            AggregateGroupByPeriodRequest(
+                metrics = setOf(WeightRecord.WEIGHT_AVG),
+                timeRangeFilter = TimeRangeFilter.between(lastLastWeek, today),
+                timeRangeSlicer = Period.ofDays(1),
+            )
+        )
+
+        val previousWeight = response.lastOrNull()?.result?.get(WeightRecord.WEIGHT_AVG)
         val weightChange = if (currentWeight == null || previousWeight == null) null
         else Mass.kilograms(currentWeight.inKilograms - previousWeight.inKilograms)
 
@@ -63,9 +75,7 @@ class HealthConnectSource(context: Context) {
         )
     }
 
-    suspend fun getNutritionInformation(
-        start: LocalDateTime, end: LocalDateTime, units: Units
-    ): Nutrition {
+    suspend fun getNutritionInformation(): Nutrition {
         if (!hasPermissions(setOf(NutritionRecord::class, HydrationRecord::class))) {
             return Nutrition(
                 null, null, null, null, null, null, null, null, units
@@ -81,40 +91,35 @@ class HealthConnectSource(context: Context) {
                     NutritionRecord.TOTAL_FAT_TOTAL,
                     HydrationRecord.VOLUME_TOTAL,
                 ),
-                timeRangeFilter = TimeRangeFilter.between(start, end),
+                timeRangeFilter = TimeRangeFilter.between(lastWeek, today),
                 timeRangeSlicer = Period.ofDays(1),
             )
         )
 
         val totalCalories =
             response.sumOf { it.result[NutritionRecord.ENERGY_TOTAL]?.inKilocalories ?: 0.0 }
-        val averageCalories =
-            if (response.isEmpty()) null
-            else Energy.kilocalories(totalCalories / response.size)
+        val averageCalories = if (response.isEmpty()) null
+        else Energy.kilocalories(totalCalories / response.size)
 
         val totalProteinGrams =
             response.sumOf { it.result[NutritionRecord.PROTEIN_TOTAL]?.inGrams ?: 0.0 }
-        val averageProteinGrams =
-            if (response.isEmpty()) null
-            else Mass.grams(totalProteinGrams / response.size)
+        val averageProteinGrams = if (response.isEmpty()) null
+        else Mass.grams(totalProteinGrams / response.size)
 
         val totalCarbsGrams =
             response.sumOf { it.result[NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL]?.inGrams ?: 0.0 }
-        val averageCarbsGrams =
-            if (response.isEmpty()) null
-            else Mass.grams(totalCarbsGrams / response.size)
+        val averageCarbsGrams = if (response.isEmpty()) null
+        else Mass.grams(totalCarbsGrams / response.size)
 
         val totalFatGrams =
             response.sumOf { it.result[NutritionRecord.TOTAL_FAT_TOTAL]?.inGrams ?: 0.0 }
-        val averageFatGrams =
-            if (response.isEmpty()) null
-            else Mass.grams(totalFatGrams / response.size)
+        val averageFatGrams = if (response.isEmpty()) null
+        else Mass.grams(totalFatGrams / response.size)
 
         val totalWaterLitres =
             response.sumOf { it.result[HydrationRecord.VOLUME_TOTAL]?.inLiters ?: 0.0 }
-        val averageWaterLitres =
-            if (response.isEmpty()) null
-            else Volume.liters(totalWaterLitres / response.size)
+        val averageWaterLitres = if (response.isEmpty()) null
+        else Volume.liters(totalWaterLitres / response.size)
 
         val daysLogged = response.size
         // TODO: calculate these values
@@ -134,11 +139,7 @@ class HealthConnectSource(context: Context) {
         )
     }
 
-    suspend fun getActivityInformation(
-        start: LocalDateTime,
-        end: LocalDateTime,
-        units: Units
-    ): Activity {
+    suspend fun getActivityInformation(): Activity {
         if (!hasPermissions(
                 setOf(
                     StepsRecord::class,
@@ -157,7 +158,7 @@ class HealthConnectSource(context: Context) {
                     ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL,
                     ExerciseSessionRecord.EXERCISE_DURATION_TOTAL,
                 ),
-                timeRangeFilter = TimeRangeFilter.between(start, end),
+                timeRangeFilter = TimeRangeFilter.between(lastWeek, today),
                 timeRangeSlicer = Period.ofDays(1),
             )
         )
@@ -183,11 +184,10 @@ class HealthConnectSource(context: Context) {
         )
     }
 
-    suspend fun getRecoveryInformation(start: LocalDateTime, end: LocalDateTime): Recovery {
+    suspend fun getRecoveryInformation(): Recovery {
         if (!hasPermissions(
                 setOf(
-                    SleepSessionRecord::class,
-                    HeartRateRecord::class
+                    SleepSessionRecord::class, HeartRateRecord::class
                 )
             )
         ) return Recovery(null, null)
@@ -199,7 +199,7 @@ class HealthConnectSource(context: Context) {
                     HeartRateRecord.MEASUREMENTS_COUNT,
                     HeartRateRecord.BPM_AVG,
                 ),
-                timeRangeFilter = TimeRangeFilter.between(start, end),
+                timeRangeFilter = TimeRangeFilter.between(lastWeek, today),
                 timeRangeSlicer = Period.ofDays(1),
             )
         )
