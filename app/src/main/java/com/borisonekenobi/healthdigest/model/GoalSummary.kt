@@ -1,6 +1,9 @@
 package com.borisonekenobi.healthdigest.model
 
-data class GoalSummary(val goals: Goals, val units: Units) {
+import com.borisonekenobi.healthdigest.model.settings.GoalPreferences
+import com.borisonekenobi.healthdigest.model.settings.Units
+
+data class GoalSummary(val goals: GoalPreferences, val units: Units) {
     override fun toString(): String {
         return """
             Calorie goal range: ${convert(goals.calorieGoal?.lowerBound)} - ${convert(goals.calorieGoal?.upperBound)}

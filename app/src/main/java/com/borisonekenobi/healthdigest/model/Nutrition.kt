@@ -3,6 +3,7 @@ package com.borisonekenobi.healthdigest.model
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Volume
+import com.borisonekenobi.healthdigest.model.settings.Units
 
 data class Nutrition(
     val averageCalories: Energy?,

@@ -24,13 +24,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.borisonekenobi.healthdigest.MainScreen
 import com.borisonekenobi.healthdigest.data.DataStoreSource
-import com.borisonekenobi.healthdigest.model.Goals
-import com.borisonekenobi.healthdigest.model.Messages
-import com.borisonekenobi.healthdigest.model.Theme
-import com.borisonekenobi.healthdigest.model.Units
-import com.borisonekenobi.healthdigest.model.UserPreferences
+import com.borisonekenobi.healthdigest.model.settings.SystemPreferences
+import com.borisonekenobi.healthdigest.model.settings.Theme
+import com.borisonekenobi.healthdigest.model.settings.Units
 import com.borisonekenobi.healthdigest.ui.theme.HealthDigestTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,16 +35,14 @@ import com.borisonekenobi.healthdigest.ui.theme.HealthDigestTheme
 fun HealthDigestApp(startDestination: String = "main") {
     val context = LocalContext.current
     val dataStoreSource = remember { DataStoreSource(context) }
-    val userPreferences by dataStoreSource.userPreferencesFlow.collectAsState(
-        initial = UserPreferences(
+    val systemPreferences by dataStoreSource.systemPreferencesFlow.collectAsState(
+        initial = SystemPreferences(
             Theme.SYSTEM,
             Units.METRIC,
-            Goals(null, null, null, null, null),
-            Messages("", ""),
         )
     )
 
-    val darkTheme = when (userPreferences.theme) {
+    val darkTheme = when (systemPreferences.theme) {
         Theme.LIGHT -> false
         Theme.DARK -> true
         Theme.SYSTEM -> isSystemInDarkTheme()
@@ -84,7 +79,82 @@ fun HealthDigestApp(startDestination: String = "main") {
                                 }
                             })
                         }) { innerPadding ->
-                        SettingsScreen(modifier = Modifier.padding(innerPadding))
+                        SettingsScreen(navController = navController, modifier = Modifier.padding(innerPadding))
+                    }
+                }
+                composable("personal-information") {
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(title = { Text("Personal Information") }, navigationIcon = {
+                                IconButton(onClick = { navController.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            })
+                        }) { innerPadding ->
+                        PersonalInformationScreen(modifier = Modifier.padding(innerPadding))
+                    }
+                }
+                composable("goal-preferences") {
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(title = { Text("Goal Preferences") }, navigationIcon = {
+                                IconButton(onClick = { navController.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            })
+                        }) { innerPadding ->
+                        GoalPreferencesScreen(modifier = Modifier.padding(innerPadding))
+                    }
+                }
+                composable("report-preferences") {
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(title = { Text("Report Preferences") }, navigationIcon = {
+                                IconButton(onClick = { navController.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            })
+                        }) { innerPadding ->
+                        ReportPreferencesScreen(modifier = Modifier.padding(innerPadding))
+                    }
+                }
+                composable("system-preferences") {
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(title = { Text("System Preferences") }, navigationIcon = {
+                                IconButton(onClick = { navController.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            })
+                        }) { innerPadding ->
+                        SystemPreferencesScreen(modifier = Modifier.padding(innerPadding))
+                    }
+                }
+                composable("health-connect") {
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(title = { Text("Health Connect") }, navigationIcon = {
+                                IconButton(onClick = { navController.popBackStack() }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            })
+                        }) { innerPadding ->
+                        HealthConnectScreen(modifier = Modifier.padding(innerPadding))
                     }
                 }
             }
@@ -94,6 +164,6 @@ fun HealthDigestApp(startDestination: String = "main") {
 
 @Preview(showBackground = true)
 @Composable
-fun HealthDigestAppPreview() {
+private fun HealthDigestAppPreview() {
     HealthDigestApp()
 }

@@ -19,12 +19,12 @@ import androidx.health.connect.client.units.Volume
 import com.borisonekenobi.healthdigest.HealthConnectManager
 import com.borisonekenobi.healthdigest.model.Activity
 import com.borisonekenobi.healthdigest.model.BodyMetrics
-import com.borisonekenobi.healthdigest.model.Goals
 import com.borisonekenobi.healthdigest.model.Nutrition
 import com.borisonekenobi.healthdigest.model.Recovery
-import com.borisonekenobi.healthdigest.model.Units
 import com.borisonekenobi.healthdigest.model.WaistFit
-import com.borisonekenobi.healthdigest.model.inRange
+import com.borisonekenobi.healthdigest.model.settings.GoalPreferences
+import com.borisonekenobi.healthdigest.model.settings.Units
+import com.borisonekenobi.healthdigest.model.settings.inRange
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.Period
@@ -77,7 +77,7 @@ class HealthConnectSource(context: Context, private val units: Units) {
         )
     }
 
-    suspend fun getNutritionInformation(userGoals: Goals): Nutrition {
+    suspend fun getNutritionInformation(userGoals: GoalPreferences): Nutrition {
         if (!hasPermissions(setOf(NutritionRecord::class, HydrationRecord::class))) {
             return Nutrition(
                 null, null, null, null, null, 0, null, null, null, null, null, units

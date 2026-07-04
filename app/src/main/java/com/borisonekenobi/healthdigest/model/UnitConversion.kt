@@ -3,6 +3,7 @@ package com.borisonekenobi.healthdigest.model
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Volume
+import com.borisonekenobi.healthdigest.model.settings.Units
 
 fun convertBig(value: Mass?, units: Units): String {
     return if (value == null) "N/A"

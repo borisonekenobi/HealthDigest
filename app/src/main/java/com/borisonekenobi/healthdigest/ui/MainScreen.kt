@@ -1,4 +1,4 @@
-package com.borisonekenobi.healthdigest
+package com.borisonekenobi.healthdigest.ui
 
 import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
@@ -53,7 +53,6 @@ import com.borisonekenobi.healthdigest.model.HungerLevel
 import com.borisonekenobi.healthdigest.model.UserData
 import com.borisonekenobi.healthdigest.model.WaistFit
 import com.borisonekenobi.healthdigest.model.WeeklyReport
-import com.borisonekenobi.healthdigest.ui.HealthDigestApp
 import kotlinx.coroutines.launch
 
 @Composable
@@ -414,6 +413,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun MainScreenPreview() {
+private fun MainScreenPreview() {
     HealthDigestApp("main")
 }

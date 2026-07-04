@@ -13,10 +13,10 @@ class HealthConnectRepository(private val context: Context) : HealthRepository {
 
     override suspend fun getWeeklyReport(userData: UserData): WeeklyReport {
         val userPreferences = dataStoreSource.userPreferencesFlow.first()
-        val healthConnectSource = HealthConnectSource(context, userPreferences.units)
+        val healthConnectSource = HealthConnectSource(context, userPreferences.systemPreferences.units)
 
         return WeeklyReport(
-            startMessage = userPreferences.messages.startMessage,
+            startMessage = userPreferences.reportPreferences.startMessage,
             summary = Summary(
                 userData.hungerLevel,
                 userData.hungerLevelComments,
@@ -24,13 +24,13 @@ class HealthConnectRepository(private val context: Context) : HealthRepository {
                 userData.energyLevelComments
             ),
             body = healthConnectSource.getBodyInformation(userData.waistFit),
-            nutrition = healthConnectSource.getNutritionInformation(userPreferences.goals),
+            nutrition = healthConnectSource.getNutritionInformation(userPreferences.goalPreferences),
             activity = healthConnectSource.getActivityInformation(),
             recovery = healthConnectSource.getRecoveryInformation(),
             health = Health(userData.painOrInjury, userData.illness, userData.healthNotes),
-            goalSummary = GoalSummary(userPreferences.goals, userPreferences.units),
+            goalSummary = GoalSummary(userPreferences.goalPreferences, userPreferences.systemPreferences.units),
             notes = userData.notes,
-            endMessage = userPreferences.messages.endMessage
+            endMessage = userPreferences.reportPreferences.endMessage
         )
     }
 }

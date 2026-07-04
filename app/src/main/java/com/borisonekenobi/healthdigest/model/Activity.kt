@@ -1,6 +1,7 @@
 package com.borisonekenobi.healthdigest.model
 
 import androidx.health.connect.client.units.Energy
+import com.borisonekenobi.healthdigest.model.settings.Units
 
 data class Activity(
     val totalSteps: Long?,

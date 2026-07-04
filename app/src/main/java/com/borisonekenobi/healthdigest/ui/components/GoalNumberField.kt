@@ -11,14 +11,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.borisonekenobi.healthdigest.model.Range
-import com.borisonekenobi.healthdigest.ui.HealthDigestApp
+import com.borisonekenobi.healthdigest.model.settings.Range
 
 @Composable
 fun GoalNumberField(
     range: Range<String>,
+    enabled: Boolean,
     goalText: String,
     units: String,
     onLowerBoundChange: (String) -> Unit,
@@ -31,6 +30,7 @@ fun GoalNumberField(
             value = range.lowerBound ?: "",
             onValueChange = onLowerBoundChange,
             modifier = Modifier.weight(1f),
+            enabled = enabled,
             label = { Text("Min $goalText") },
             suffix = { Text(units) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -52,6 +52,7 @@ fun GoalNumberField(
             value = range.upperBound ?: "",
             onValueChange = onUpperBoundChange,
             modifier = Modifier.weight(1f),
+            enabled = enabled,
             label = { Text("Max $goalText") },
             suffix = { Text(units) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -69,10 +70,4 @@ fun GoalNumberField(
             )
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsScreenPreview() {
-    HealthDigestApp("settings")
 }

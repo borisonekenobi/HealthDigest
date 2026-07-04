@@ -9,41 +9,80 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Volume
-import com.borisonekenobi.healthdigest.model.Range
-import com.borisonekenobi.healthdigest.model.Goals
-import com.borisonekenobi.healthdigest.model.Messages
-import com.borisonekenobi.healthdigest.model.Theme
-import com.borisonekenobi.healthdigest.model.Units
-import com.borisonekenobi.healthdigest.model.UserPreferences
+import com.borisonekenobi.healthdigest.model.settings.GoalPreferences
+import com.borisonekenobi.healthdigest.model.settings.Range
+import com.borisonekenobi.healthdigest.model.settings.PersonalInformation
+import com.borisonekenobi.healthdigest.model.settings.ReportPreferences
+import com.borisonekenobi.healthdigest.model.settings.Sex
+import com.borisonekenobi.healthdigest.model.settings.SystemPreferences
+import com.borisonekenobi.healthdigest.model.settings.Theme
+import com.borisonekenobi.healthdigest.model.settings.Units
+import com.borisonekenobi.healthdigest.model.settings.UserPreferences
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class DataStoreSource(private val context: Context) {
-    val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data.map { preferences ->
+    val personalInformationFlow: Flow<PersonalInformation> = context.dataStore.data.map { preferences ->
+        PersonalInformation(
+            sex = getSex(preferences),
+            birthDate = getBirthDate(preferences),
+        )
+    }
+
+    val goalPreferencesFlow: Flow<GoalPreferences> = context.dataStore.data.map { preferences ->
+        GoalPreferences(
+            autoNutritionGoals = getBoolean(preferences, PreferenceKeys.AUTO_NUTRITION_GOALS),
+            calorieGoal = Range(
+                lowerBound = getEnergy(preferences, PreferenceKeys.CALORIE_GOAL_LOWER),
+                upperBound = getEnergy(preferences, PreferenceKeys.CALORIE_GOAL_UPPER)
+            ),
+            proteinGoal = Range(
+                lowerBound = getMass(preferences, PreferenceKeys.PROTEIN_GOAL_LOWER),
+                upperBound = getMass(preferences, PreferenceKeys.PROTEIN_GOAL_UPPER)
+            ),
+            carbsGoal = Range(
+                lowerBound = getMass(preferences, PreferenceKeys.CARBS_GOAL_LOWER),
+                upperBound = getMass(preferences, PreferenceKeys.CARBS_GOAL_UPPER)
+            ),
+            fatGoal = Range(
+                lowerBound = getMass(preferences, PreferenceKeys.FAT_GOAL_LOWER),
+                upperBound = getMass(preferences, PreferenceKeys.FAT_GOAL_UPPER)
+            ),
+            autoHydrationGoals = getBoolean(preferences, PreferenceKeys.AUTO_HYDRATION_GOALS),
+            waterGoal = getVolume(preferences, PreferenceKeys.WATER_GOAL)
+
+        )
+    }
+
+    val reportPreferencesFlow: Flow<ReportPreferences> = context.dataStore.data.map { preferences ->
+        ReportPreferences(
+            startMessage = getString(preferences, PreferenceKeys.START_MESSAGE),
+            endMessage = getString(preferences, PreferenceKeys.END_MESSAGE)
+        )
+    }
+
+    val systemPreferencesFlow: Flow<SystemPreferences> = context.dataStore.data.map { preferences ->
+        SystemPreferences(
+            theme = getTheme(preferences),
+            units = getUnits(preferences)
+        )
+    }
+
+    val userPreferencesFlow: Flow<UserPreferences> = combine(
+        personalInformationFlow,
+        goalPreferencesFlow,
+        reportPreferencesFlow,
+        systemPreferencesFlow
+    ) { personalInformation, goalPreferences, reportPreferences, systemPreferences ->
         UserPreferences(
-            getTheme(preferences),
-            getUnits(preferences),
-            Goals(
-                Range(
-                    getEnergy(preferences, PreferenceKeys.CALORIE_GOAL_LOWER),
-                    getEnergy(preferences, PreferenceKeys.CALORIE_GOAL_UPPER)
-                ), Range(
-                    getMass(preferences, PreferenceKeys.PROTEIN_GOAL_LOWER),
-                    getMass(preferences, PreferenceKeys.PROTEIN_GOAL_UPPER)
-                ), Range(
-                    getMass(preferences, PreferenceKeys.CARBS_GOAL_LOWER),
-                    getMass(preferences, PreferenceKeys.CARBS_GOAL_UPPER)
-                ), Range(
-                    getMass(preferences, PreferenceKeys.FAT_GOAL_LOWER),
-                    getMass(preferences, PreferenceKeys.FAT_GOAL_UPPER)
-                ), getVolume(preferences, PreferenceKeys.WATER_GOAL)
-            ),
-            Messages(
-                getString(preferences, PreferenceKeys.START_MESSAGE),
-                getString(preferences, PreferenceKeys.END_MESSAGE)
-            ),
+            personalInformation,
+            goalPreferences,
+            reportPreferences,
+            systemPreferences,
         )
     }
 
@@ -51,6 +90,18 @@ class DataStoreSource(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[key.value] = value
         }
+    }
+
+    private fun getSex(preferences: Preferences): Sex? = try {
+        Sex.valueOf(preferences[PreferenceKeys.SEX.value] ?: "")
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun getBirthDate(preferences: Preferences): LocalDate? = try {
+        LocalDate.parse(preferences[PreferenceKeys.BIRTH_DATE.value])
+    } catch (_: Exception) {
+        null
     }
 
     private fun getTheme(preferences: Preferences): Theme = try {
@@ -63,6 +114,12 @@ class DataStoreSource(private val context: Context) {
         Units.valueOf(preferences[PreferenceKeys.UNITS.value] ?: Units.METRIC.name)
     } catch (_: Exception) {
         Units.METRIC
+    }
+
+    private fun getBoolean(preferences: Preferences, key: PreferenceKeys): Boolean = try {
+        preferences[key.value].toBoolean()
+    } catch (_: Exception) {
+        false
     }
 
     private fun getEnergy(preferences: Preferences, key: PreferenceKeys): Energy? = try {
@@ -91,8 +148,13 @@ class DataStoreSource(private val context: Context) {
 }
 
 enum class PreferenceKeys(val value: Preferences.Key<String>) {
+    SEX(stringPreferencesKey("sex")),
+    BIRTH_DATE(stringPreferencesKey("birth-date")),
+
     THEME(stringPreferencesKey("theme")),
     UNITS(stringPreferencesKey("units")),
+
+    AUTO_NUTRITION_GOALS(stringPreferencesKey("auto-nutrition-goals")),
     CALORIE_GOAL_LOWER(stringPreferencesKey("calorie-goal-lower")),
     CALORIE_GOAL_UPPER(stringPreferencesKey("calorie-goal-upper")),
     PROTEIN_GOAL_LOWER(stringPreferencesKey("protein-goal-lower")),
@@ -101,7 +163,9 @@ enum class PreferenceKeys(val value: Preferences.Key<String>) {
     CARBS_GOAL_UPPER(stringPreferencesKey("carbs-goal-upper")),
     FAT_GOAL_LOWER(stringPreferencesKey("fat-goal-lower")),
     FAT_GOAL_UPPER(stringPreferencesKey("fat-goal-upper")),
+    AUTO_HYDRATION_GOALS(stringPreferencesKey("auto-hydration-goals")),
     WATER_GOAL(stringPreferencesKey("water-goal")),
+
     START_MESSAGE(stringPreferencesKey("start-message")),
     END_MESSAGE(stringPreferencesKey("end-message")),
 }
