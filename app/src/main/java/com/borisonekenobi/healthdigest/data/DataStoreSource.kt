@@ -13,11 +13,11 @@ import com.borisonekenobi.healthdigest.model.settings.GoalPreferences
 import com.borisonekenobi.healthdigest.model.settings.Range
 import com.borisonekenobi.healthdigest.model.settings.PersonalInformation
 import com.borisonekenobi.healthdigest.model.settings.ReportPreferences
-import com.borisonekenobi.healthdigest.model.settings.Sex
 import com.borisonekenobi.healthdigest.model.settings.SystemPreferences
 import com.borisonekenobi.healthdigest.model.settings.Theme
 import com.borisonekenobi.healthdigest.model.settings.Units
 import com.borisonekenobi.healthdigest.model.settings.UserPreferences
+import com.borisonekenobi.healthdigest.model.settings.WeightGoal
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -28,13 +28,14 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class DataStoreSource(private val context: Context) {
     val personalInformationFlow: Flow<PersonalInformation> = context.dataStore.data.map { preferences ->
         PersonalInformation(
-            sex = getSex(preferences),
+            sex = getEnum(preferences, PreferenceKeys.SEX, null),
             birthDate = getBirthDate(preferences),
         )
     }
 
     val goalPreferencesFlow: Flow<GoalPreferences> = context.dataStore.data.map { preferences ->
         GoalPreferences(
+            weightGoal = getEnum(preferences, PreferenceKeys.WEIGHT_GOAL, WeightGoal.MAINTAIN)!!,
             autoNutritionGoals = getBoolean(preferences, PreferenceKeys.AUTO_NUTRITION_GOALS),
             calorieGoal = Range(
                 lowerBound = getEnergy(preferences, PreferenceKeys.CALORIE_GOAL_LOWER),
@@ -54,7 +55,6 @@ class DataStoreSource(private val context: Context) {
             ),
             autoHydrationGoals = getBoolean(preferences, PreferenceKeys.AUTO_HYDRATION_GOALS),
             waterGoal = getVolume(preferences, PreferenceKeys.WATER_GOAL)
-
         )
     }
 
@@ -67,8 +67,8 @@ class DataStoreSource(private val context: Context) {
 
     val systemPreferencesFlow: Flow<SystemPreferences> = context.dataStore.data.map { preferences ->
         SystemPreferences(
-            theme = getTheme(preferences),
-            units = getUnits(preferences)
+            theme = getEnum(preferences, PreferenceKeys.THEME, Theme.SYSTEM)!!,
+            units = getEnum(preferences, PreferenceKeys.UNITS, Units.METRIC)!!
         )
     }
 
@@ -92,28 +92,16 @@ class DataStoreSource(private val context: Context) {
         }
     }
 
-    private fun getSex(preferences: Preferences): Sex? = try {
-        Sex.valueOf(preferences[PreferenceKeys.SEX.value] ?: "")
+    private inline fun <reified T : Enum<T>> getEnum(preferences: Preferences, key: PreferenceKeys, default: T? = null): T? = try {
+        enumValueOf(preferences[key.value] ?: "")
     } catch (_: Exception) {
-        null
+        default
     }
 
     private fun getBirthDate(preferences: Preferences): LocalDate? = try {
         LocalDate.parse(preferences[PreferenceKeys.BIRTH_DATE.value])
     } catch (_: Exception) {
         null
-    }
-
-    private fun getTheme(preferences: Preferences): Theme = try {
-        Theme.valueOf(preferences[PreferenceKeys.THEME.value] ?: Theme.SYSTEM.name)
-    } catch (_: Exception) {
-        Theme.SYSTEM
-    }
-
-    private fun getUnits(preferences: Preferences): Units = try {
-        Units.valueOf(preferences[PreferenceKeys.UNITS.value] ?: Units.METRIC.name)
-    } catch (_: Exception) {
-        Units.METRIC
     }
 
     private fun getBoolean(preferences: Preferences, key: PreferenceKeys): Boolean = try {
@@ -154,6 +142,7 @@ enum class PreferenceKeys(val value: Preferences.Key<String>) {
     THEME(stringPreferencesKey("theme")),
     UNITS(stringPreferencesKey("units")),
 
+    WEIGHT_GOAL(stringPreferencesKey("weight-goal")),
     AUTO_NUTRITION_GOALS(stringPreferencesKey("auto-nutrition-goals")),
     CALORIE_GOAL_LOWER(stringPreferencesKey("calorie-goal-lower")),
     CALORIE_GOAL_UPPER(stringPreferencesKey("calorie-goal-upper")),
