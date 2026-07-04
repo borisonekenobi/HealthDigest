@@ -1,6 +1,7 @@
 package com.borisonekenobi.healthdigest.ui
 
 import android.widget.Toast
+import java.util.Locale
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -94,13 +96,22 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
     var lastInitializedUnits by remember { mutableStateOf<Units?>(null) }
 
+    fun isValidNumberInput(value: String): Boolean {
+        return if (value.isEmpty()) true
+        else value.substringAfter('.', "").length <= 2
+    }
+
     LaunchedEffect(userPreferencesNullable, userPreferences.units) {
         val prefs = userPreferencesNullable
         if (prefs != null && lastInitializedUnits != userPreferences.units) {
             val units = userPreferences.units
 
             fun formatDouble(d: Double?): String =
-                d?.let { if (it == 0.0) "" else if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: ""
+                d?.let {
+                    if (it == 0.0) ""
+                    else if (it % 1.0 == 0.0) it.toInt().toString()
+                    else "%.2f".format(Locale.US, it).trimEnd('0').trimEnd('.')
+                } ?: ""
 
             calorieRange = Range(
                 prefs.goals.calorieGoal?.lowerBound?.inKilocalories?.let { formatDouble(it) },
@@ -167,6 +178,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
+            .imePadding()
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top
@@ -318,7 +330,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         GoalNumberField(
             calorieRange, "Calorie", energyUnits(),
             onLowerBoundChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     calorieRange = calorieRange.copy(lowerBound = newValue)
                     scope.launch {
                         val valueToSave = newValue.toDoubleOrNull()?.toString() ?: ""
@@ -330,7 +342,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 }
             },
             onUpperBoundChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     calorieRange = calorieRange.copy(upperBound = newValue)
                     scope.launch {
                         val valueToSave = newValue.toDoubleOrNull()?.toString() ?: ""
@@ -348,7 +360,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         GoalNumberField(
             proteinRange, "Protein", smallMassUnits(userPreferences.units),
             onLowerBoundChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     proteinRange = proteinRange.copy(lowerBound = newValue)
                     scope.launch {
                         val doubleValue = newValue.toDoubleOrNull()
@@ -366,7 +378,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 }
             },
             onUpperBoundChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     proteinRange = proteinRange.copy(upperBound = newValue)
                     scope.launch {
                         val doubleValue = newValue.toDoubleOrNull()
@@ -390,7 +402,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         GoalNumberField(
             carbsRange, "Carbs", smallMassUnits(userPreferences.units),
             onLowerBoundChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     carbsRange = carbsRange.copy(lowerBound = newValue)
                     scope.launch {
                         val doubleValue = newValue.toDoubleOrNull()
@@ -408,7 +420,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 }
             },
             onUpperBoundChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     carbsRange = carbsRange.copy(upperBound = newValue)
                     scope.launch {
                         val doubleValue = newValue.toDoubleOrNull()
@@ -432,7 +444,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         GoalNumberField(
             fatRange, "Fat", smallMassUnits(userPreferences.units),
             onLowerBoundChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     fatRange = fatRange.copy(lowerBound = newValue)
                     scope.launch {
                         val doubleValue = newValue.toDoubleOrNull()
@@ -450,7 +462,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 }
             },
             onUpperBoundChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     fatRange = fatRange.copy(upperBound = newValue)
                     scope.launch {
                         val doubleValue = newValue.toDoubleOrNull()
@@ -474,13 +486,13 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         OutlinedTextField(
             value = waterGoal,
             onValueChange = { newValue ->
-                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                if (isValidNumberInput(newValue)) {
                     waterGoal = newValue
                     scope.launch {
                         val doubleValue = newValue.toDoubleOrNull()
                         val mlValue = if (doubleValue == null) "" else {
                             when (userPreferences.units) {
-                                Units.METRIC -> Volume.liters(doubleValue).inMilliliters
+                                Units.METRIC -> Volume.milliliters(doubleValue).inMilliliters
                                 Units.IMPERIAL -> Volume.fluidOuncesUs(doubleValue).inMilliliters
                             }.toString()
                         }
