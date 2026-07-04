@@ -8,6 +8,7 @@ data class WeeklyReport(
     val activity: Activity,
     val recovery: Recovery,
     val health: Health,
+    val goalSummary: GoalSummary,
     val notes: String,
     val endMessage: String,
 ) {
@@ -38,6 +39,9 @@ data class WeeklyReport(
             
             ## Health
             $health
+            
+            ## Goal Summary
+            $goalSummary
             
             ## Notes
 ${notes.ifBlank { "N/A" }.prependIndent("            ")}$em

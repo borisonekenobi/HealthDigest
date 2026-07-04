@@ -7,31 +7,53 @@ import androidx.health.connect.client.units.Volume
 fun convertBig(value: Mass?, units: Units): String {
     return if (value == null) "N/A"
     else when (units) {
-        Units.METRIC -> "%.1f kg".format(value.inKilograms)
-        Units.IMPERIAL -> "%.1f lbs".format(value.inPounds)
+        Units.METRIC -> "%.1f %s".format(value.inKilograms, bigMassUnits(units))
+        Units.IMPERIAL -> "%.1f %s".format(value.inPounds, bigMassUnits(units))
     }
 }
 
 fun convertSmall(value: Mass?, units: Units): String {
     return if (value == null) "N/A"
     else when (units) {
-        Units.METRIC -> "%.0f g".format(value.inGrams)
-        Units.IMPERIAL -> "%.0f oz".format(value.inOunces)
+        Units.METRIC -> "%.0f %s".format(value.inGrams, smallMassUnits(units))
+        Units.IMPERIAL -> "%.0f %s".format(value.inOunces, smallMassUnits(units))
     }
 }
 
-fun convert(value: Energy?, units: Units): String {
+fun convert(value: Energy?): String {
     return if (value == null) "N/A"
-    else when (units) {
-        Units.METRIC -> "%.0f kcal".format(value.inKilocalories)
-        Units.IMPERIAL -> "%.0f kcal".format(value.inKilocalories)
-    }
+    else "%.0f %s".format(value.inKilocalories, energyUnits())
 }
 
 fun convert(value: Volume?, units: Units): String {
     return if (value == null) "N/A"
     else when (units) {
-        Units.METRIC -> "%.1f L".format(value.inLiters)
-        Units.IMPERIAL -> "%.1f fl oz".format(value.inFluidOuncesUs)
+        Units.METRIC -> "%.2f %s".format(value.inMilliliters, volumeUnits(units))
+        Units.IMPERIAL -> "%.2f %s".format(value.inFluidOuncesUs, volumeUnits(units))
+    }
+}
+
+fun bigMassUnits(units: Units): String {
+    return when (units) {
+        Units.METRIC -> "kg"
+        Units.IMPERIAL -> "lbs"
+    }
+}
+
+fun smallMassUnits(units: Units): String {
+    return when (units) {
+        Units.METRIC -> "g"
+        Units.IMPERIAL -> "oz"
+    }
+}
+
+fun energyUnits(): String {
+    return "kcal"
+}
+
+fun volumeUnits(units: Units): String {
+    return when (units) {
+        Units.METRIC -> "mL"
+        Units.IMPERIAL -> "fl oz"
     }
 }

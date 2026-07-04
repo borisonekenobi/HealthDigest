@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
@@ -44,18 +45,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.units.Mass
+import androidx.health.connect.client.units.Volume
 import com.borisonekenobi.healthdigest.data.DataStoreSource
 import com.borisonekenobi.healthdigest.data.HealthConnectPermissions
 import com.borisonekenobi.healthdigest.data.HealthPermissions
 import com.borisonekenobi.healthdigest.data.PreferenceKeys
+import com.borisonekenobi.healthdigest.model.Range
+import com.borisonekenobi.healthdigest.model.Goals
+import com.borisonekenobi.healthdigest.model.Messages
 import com.borisonekenobi.healthdigest.model.Theme
 import com.borisonekenobi.healthdigest.model.Units
 import com.borisonekenobi.healthdigest.model.UserPreferences
+import com.borisonekenobi.healthdigest.model.energyUnits
+import com.borisonekenobi.healthdigest.model.smallMassUnits
+import com.borisonekenobi.healthdigest.model.volumeUnits
+import com.borisonekenobi.healthdigest.ui.components.GoalNumberField
 import kotlinx.coroutines.launch
 
 @Composable
@@ -65,17 +76,70 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
     val dataStoreSource = remember { DataStoreSource(context) }
     val userPreferencesNullable by dataStoreSource.userPreferencesFlow.collectAsState(initial = null)
-    val userPreferences = userPreferencesNullable ?: UserPreferences(Units.METRIC, "", "", Theme.SYSTEM)
+    val userPreferences = userPreferencesNullable ?: UserPreferences(
+        Theme.SYSTEM,
+        Units.METRIC,
+        Goals(null, null, null, null, null),
+        Messages("", ""),
+    )
+
+    var calorieRange by remember { mutableStateOf(Range<String>(null, null)) }
+    var proteinRange by remember { mutableStateOf(Range<String>(null, null)) }
+    var carbsRange by remember { mutableStateOf(Range<String>(null, null)) }
+    var fatRange by remember { mutableStateOf(Range<String>(null, null)) }
+    var waterGoal by remember { mutableStateOf("") }
 
     var startMessage by remember { mutableStateOf("") }
     var endMessage by remember { mutableStateOf("") }
-    var hasInitialized by remember { mutableStateOf(false) }
 
-    LaunchedEffect(userPreferencesNullable) {
-        if (userPreferencesNullable != null && !hasInitialized) {
-            startMessage = userPreferencesNullable!!.startMessage
-            endMessage = userPreferencesNullable!!.endMessage
-            hasInitialized = true
+    var lastInitializedUnits by remember { mutableStateOf<Units?>(null) }
+
+    LaunchedEffect(userPreferencesNullable, userPreferences.units) {
+        val prefs = userPreferencesNullable
+        if (prefs != null && lastInitializedUnits != userPreferences.units) {
+            val units = userPreferences.units
+
+            fun formatDouble(d: Double?): String =
+                d?.let { if (it == 0.0) "" else if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: ""
+
+            calorieRange = Range(
+                prefs.goals.calorieGoal?.lowerBound?.inKilocalories?.let { formatDouble(it) },
+                prefs.goals.calorieGoal?.upperBound?.inKilocalories?.let { formatDouble(it) }
+            )
+            proteinRange = Range(
+                prefs.goals.proteinGoal?.lowerBound?.let {
+                    formatDouble(if (units == Units.METRIC) it.inGrams else it.inOunces)
+                },
+                prefs.goals.proteinGoal?.upperBound?.let {
+                    formatDouble(if (units == Units.METRIC) it.inGrams else it.inOunces)
+                }
+            )
+            carbsRange = Range(
+                prefs.goals.carbsGoal?.lowerBound?.let {
+                    formatDouble(if (units == Units.METRIC) it.inGrams else it.inOunces)
+                },
+                prefs.goals.carbsGoal?.upperBound?.let {
+                    formatDouble(if (units == Units.METRIC) it.inGrams else it.inOunces)
+                }
+            )
+            fatRange = Range(
+                prefs.goals.fatGoal?.lowerBound?.let {
+                    formatDouble(if (units == Units.METRIC) it.inGrams else it.inOunces)
+                },
+                prefs.goals.fatGoal?.upperBound?.let {
+                    formatDouble(if (units == Units.METRIC) it.inGrams else it.inOunces)
+                }
+            )
+            waterGoal = prefs.goals.waterGoal?.let {
+                formatDouble(if (units == Units.METRIC) it.inMilliliters else it.inFluidOuncesUs)
+            } ?: ""
+
+            if (lastInitializedUnits == null) {
+                startMessage = prefs.messages.startMessage
+                endMessage = prefs.messages.endMessage
+            }
+
+            lastInitializedUnits = units
         }
     }
 
@@ -149,6 +213,54 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        Text(text = "Theme")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            val themes = Theme.entries
+            themes.forEachIndexed { index, theme ->
+                val isSelected = userPreferences.theme == theme
+                OutlinedIconButton(
+                    onClick = {
+                        scope.launch {
+                            dataStoreSource.saveUserPreference(PreferenceKeys.THEME, theme.name)
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 0.dp)
+                        .height(48.dp)
+                        .zIndex(if (isSelected) 1f else 0f),
+                    shape = when (index) {
+                        0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                        themes.size - 1 -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                        else -> RectangleShape
+                    },
+                    colors = IconButtonDefaults.outlinedIconButtonColors(
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Icon(
+                        imageVector = theme.value, contentDescription = theme.name
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 16.dp),
+            color = MaterialTheme.colorScheme.outlineVariant
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         Text(text = "Units")
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -199,45 +311,187 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = "Messages")
+        Text(text = "Goals")
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = startMessage,
-            onValueChange = {
-                startMessage = it
-                hasInitialized = true
-                scope.launch {
-                    dataStoreSource.saveUserPreference(PreferenceKeys.START_MESSAGE, it)
+        GoalNumberField(
+            calorieRange, "Calorie", energyUnits(),
+            onLowerBoundChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    calorieRange = calorieRange.copy(lowerBound = newValue)
+                    scope.launch {
+                        val valueToSave = newValue.toDoubleOrNull()?.toString() ?: ""
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.CALORIE_GOAL_LOWER,
+                            valueToSave
+                        )
+                    }
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth(),
-            label = { Text("Start Message (optional)") },
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            )
+            onUpperBoundChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    calorieRange = calorieRange.copy(upperBound = newValue)
+                    scope.launch {
+                        val valueToSave = newValue.toDoubleOrNull()?.toString() ?: ""
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.CALORIE_GOAL_UPPER,
+                            valueToSave
+                        )
+                    }
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        GoalNumberField(
+            proteinRange, "Protein", smallMassUnits(userPreferences.units),
+            onLowerBoundChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    proteinRange = proteinRange.copy(lowerBound = newValue)
+                    scope.launch {
+                        val doubleValue = newValue.toDoubleOrNull()
+                        val gramsValue = if (doubleValue == null) "" else {
+                            when (userPreferences.units) {
+                                Units.METRIC -> Mass.grams(doubleValue).inGrams
+                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                            }.toString()
+                        }
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.PROTEIN_GOAL_LOWER,
+                            gramsValue
+                        )
+                    }
+                }
+            },
+            onUpperBoundChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    proteinRange = proteinRange.copy(upperBound = newValue)
+                    scope.launch {
+                        val doubleValue = newValue.toDoubleOrNull()
+                        val gramsValue = if (doubleValue == null) "" else {
+                            when (userPreferences.units) {
+                                Units.METRIC -> Mass.grams(doubleValue).inGrams
+                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                            }.toString()
+                        }
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.PROTEIN_GOAL_UPPER,
+                            gramsValue
+                        )
+                    }
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        GoalNumberField(
+            carbsRange, "Carbs", smallMassUnits(userPreferences.units),
+            onLowerBoundChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    carbsRange = carbsRange.copy(lowerBound = newValue)
+                    scope.launch {
+                        val doubleValue = newValue.toDoubleOrNull()
+                        val gramsValue = if (doubleValue == null) "" else {
+                            when (userPreferences.units) {
+                                Units.METRIC -> Mass.grams(doubleValue).inGrams
+                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                            }.toString()
+                        }
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.CARBS_GOAL_LOWER,
+                            gramsValue
+                        )
+                    }
+                }
+            },
+            onUpperBoundChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    carbsRange = carbsRange.copy(upperBound = newValue)
+                    scope.launch {
+                        val doubleValue = newValue.toDoubleOrNull()
+                        val gramsValue = if (doubleValue == null) "" else {
+                            when (userPreferences.units) {
+                                Units.METRIC -> Mass.grams(doubleValue).inGrams
+                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                            }.toString()
+                        }
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.CARBS_GOAL_UPPER,
+                            gramsValue
+                        )
+                    }
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        GoalNumberField(
+            fatRange, "Fat", smallMassUnits(userPreferences.units),
+            onLowerBoundChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    fatRange = fatRange.copy(lowerBound = newValue)
+                    scope.launch {
+                        val doubleValue = newValue.toDoubleOrNull()
+                        val gramsValue = if (doubleValue == null) "" else {
+                            when (userPreferences.units) {
+                                Units.METRIC -> Mass.grams(doubleValue).inGrams
+                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                            }.toString()
+                        }
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.FAT_GOAL_LOWER,
+                            gramsValue
+                        )
+                    }
+                }
+            },
+            onUpperBoundChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    fatRange = fatRange.copy(upperBound = newValue)
+                    scope.launch {
+                        val doubleValue = newValue.toDoubleOrNull()
+                        val gramsValue = if (doubleValue == null) "" else {
+                            when (userPreferences.units) {
+                                Units.METRIC -> Mass.grams(doubleValue).inGrams
+                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                            }.toString()
+                        }
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.FAT_GOAL_UPPER,
+                            gramsValue
+                        )
+                    }
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = endMessage,
-            onValueChange = {
-                endMessage = it
-                hasInitialized = true
-                scope.launch {
-                    dataStoreSource.saveUserPreference(PreferenceKeys.END_MESSAGE, it)
+            value = waterGoal,
+            onValueChange = { newValue ->
+                if (newValue.isEmpty() || newValue.toDoubleOrNull() != null || newValue.endsWith(".")) {
+                    waterGoal = newValue
+                    scope.launch {
+                        val doubleValue = newValue.toDoubleOrNull()
+                        val mlValue = if (doubleValue == null) "" else {
+                            when (userPreferences.units) {
+                                Units.METRIC -> Volume.liters(doubleValue).inMilliliters
+                                Units.IMPERIAL -> Volume.fluidOuncesUs(doubleValue).inMilliliters
+                            }.toString()
+                        }
+                        dataStoreSource.saveUserPreference(PreferenceKeys.WATER_GOAL, mlValue)
+                    }
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth(),
-            label = { Text("End Message (optional)") },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Water goal (optional)") },
+            suffix = { Text(volumeUnits(userPreferences.units)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -256,45 +510,51 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = "Theme")
+        Text(text = "Messages")
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            val themes = Theme.entries
-            themes.forEachIndexed { index, theme ->
-                val isSelected = userPreferences.theme == theme
-                OutlinedIconButton(
-                    onClick = {
-                        scope.launch {
-                            dataStoreSource.saveUserPreference(PreferenceKeys.THEME, theme.name)
-                        }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 0.dp)
-                        .height(48.dp)
-                        .zIndex(if (isSelected) 1f else 0f),
-                    shape = when (index) {
-                        0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
-                        themes.size - 1 -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
-                        else -> RectangleShape
-                    },
-                    colors = IconButtonDefaults.outlinedIconButtonColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                ) {
-                    Icon(
-                        imageVector = theme.value,
-                        contentDescription = theme.name
-                    )
+        OutlinedTextField(
+            value = startMessage,
+            onValueChange = {
+                startMessage = it
+                scope.launch {
+                    dataStoreSource.saveUserPreference(PreferenceKeys.START_MESSAGE, it)
                 }
-            }
-        }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Start Message (optional)") },
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = endMessage,
+            onValueChange = {
+                endMessage = it
+                scope.launch {
+                    dataStoreSource.saveUserPreference(PreferenceKeys.END_MESSAGE, it)
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("End Message (optional)") },
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

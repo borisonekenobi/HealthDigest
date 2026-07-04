@@ -1,16 +1,12 @@
 package com.borisonekenobi.healthdigest.model
 
-data class GoalSummary(
-    val calorieGoalMet: Boolean,
-    val proteinGoalMet: Boolean,
-    val stepGoalMet: Boolean,
-    val weightGoalMet: Boolean
-) {
+data class GoalSummary(val goals: Goals, val units: Units) {
     override fun toString(): String {
         return """
-            Calorie Goal Met: ${if (calorieGoalMet) "Yes" else "No"}
-            Protein Goal Met: ${if (proteinGoalMet) "Yes" else "No"}
-            Step Goal Met: ${if (stepGoalMet) "Yes" else "No"}
-            Weight Goal Met: ${if (weightGoalMet) "Yes" else "No"}"""
+            Calorie goal range: ${convert(goals.calorieGoal?.lowerBound)} - ${convert(goals.calorieGoal?.upperBound)}
+            Protein goal range: ${convertSmall(goals.proteinGoal?.lowerBound, units)} - ${convertSmall(goals.proteinGoal?.upperBound, units)}
+            Carbs goal range: ${convertSmall(goals.carbsGoal?.lowerBound, units)} - ${convertSmall(goals.carbsGoal?.upperBound, units)}
+            Fat goal range: ${convertSmall(goals.fatGoal?.lowerBound, units)} - ${convertSmall(goals.fatGoal?.upperBound, units)}
+            Water goal: ${convert(goals.waterGoal, units)}"""
     }
 }

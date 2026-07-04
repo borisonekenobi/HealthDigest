@@ -14,7 +14,7 @@ data class Activity(
         return """
             Total Steps: ${totalSteps ?: "N/A"}
             Average Steps Per Day: ${averageStepsPerDay ?: "N/A"}
-            Active Calories: ${convert(activeCalories, units)}
+            Active Calories: ${convert(activeCalories)}
             Exercise Minutes: ${exerciseMinutes ?: "N/A"}
             Workout Count: ${workoutCount ?: "N/A"}"""
     }

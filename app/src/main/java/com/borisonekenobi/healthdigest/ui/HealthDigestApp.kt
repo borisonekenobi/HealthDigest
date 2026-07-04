@@ -26,6 +26,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.borisonekenobi.healthdigest.MainScreen
 import com.borisonekenobi.healthdigest.data.DataStoreSource
+import com.borisonekenobi.healthdigest.model.Goals
+import com.borisonekenobi.healthdigest.model.Messages
 import com.borisonekenobi.healthdigest.model.Theme
 import com.borisonekenobi.healthdigest.model.Units
 import com.borisonekenobi.healthdigest.model.UserPreferences
@@ -37,7 +39,12 @@ fun HealthDigestApp(startDestination: String = "main") {
     val context = LocalContext.current
     val dataStoreSource = remember { DataStoreSource(context) }
     val userPreferences by dataStoreSource.userPreferencesFlow.collectAsState(
-        initial = UserPreferences(Units.METRIC, "", "", Theme.SYSTEM)
+        initial = UserPreferences(
+            Theme.SYSTEM,
+            Units.METRIC,
+            Goals(null, null, null, null, null),
+            Messages("", ""),
+        )
     )
 
     val darkTheme = when (userPreferences.theme) {
@@ -50,8 +57,7 @@ fun HealthDigestApp(startDestination: String = "main") {
         val navController = rememberNavController()
 
         Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
         ) {
             NavHost(navController = navController, startDestination = startDestination) {
                 composable("main") {

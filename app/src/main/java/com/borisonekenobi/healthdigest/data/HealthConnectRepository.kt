@@ -1,6 +1,7 @@
 package com.borisonekenobi.healthdigest.data
 
 import android.content.Context
+import com.borisonekenobi.healthdigest.model.GoalSummary
 import com.borisonekenobi.healthdigest.model.Health
 import com.borisonekenobi.healthdigest.model.Summary
 import com.borisonekenobi.healthdigest.model.UserData
@@ -15,7 +16,7 @@ class HealthConnectRepository(private val context: Context) : HealthRepository {
         val healthConnectSource = HealthConnectSource(context, userPreferences.units)
 
         return WeeklyReport(
-            startMessage = userPreferences.startMessage,
+            startMessage = userPreferences.messages.startMessage,
             summary = Summary(
                 userData.hungerLevel,
                 userData.hungerLevelComments,
@@ -23,12 +24,13 @@ class HealthConnectRepository(private val context: Context) : HealthRepository {
                 userData.energyLevelComments
             ),
             body = healthConnectSource.getBodyInformation(userData.waistFit),
-            nutrition = healthConnectSource.getNutritionInformation(),
+            nutrition = healthConnectSource.getNutritionInformation(userPreferences.goals),
             activity = healthConnectSource.getActivityInformation(),
             recovery = healthConnectSource.getRecoveryInformation(),
             health = Health(userData.painOrInjury, userData.illness, userData.healthNotes),
+            goalSummary = GoalSummary(userPreferences.goals, userPreferences.units),
             notes = userData.notes,
-            endMessage = userPreferences.endMessage
+            endMessage = userPreferences.messages.endMessage
         )
     }
 }

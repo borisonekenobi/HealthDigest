@@ -19,10 +19,12 @@ import androidx.health.connect.client.units.Volume
 import com.borisonekenobi.healthdigest.HealthConnectManager
 import com.borisonekenobi.healthdigest.model.Activity
 import com.borisonekenobi.healthdigest.model.BodyMetrics
+import com.borisonekenobi.healthdigest.model.Goals
 import com.borisonekenobi.healthdigest.model.Nutrition
 import com.borisonekenobi.healthdigest.model.Recovery
 import com.borisonekenobi.healthdigest.model.Units
 import com.borisonekenobi.healthdigest.model.WaistFit
+import com.borisonekenobi.healthdigest.model.inRange
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.Period
@@ -75,10 +77,10 @@ class HealthConnectSource(context: Context, private val units: Units) {
         )
     }
 
-    suspend fun getNutritionInformation(): Nutrition {
+    suspend fun getNutritionInformation(userGoals: Goals): Nutrition {
         if (!hasPermissions(setOf(NutritionRecord::class, HydrationRecord::class))) {
             return Nutrition(
-                null, null, null, null, null, null, null, null, units
+                null, null, null, null, null, 0, null, null, null, null, null, units
             )
         }
 
@@ -116,25 +118,34 @@ class HealthConnectSource(context: Context, private val units: Units) {
         val averageFatGrams = if (response.isEmpty()) null
         else Mass.grams(totalFatGrams / response.size)
 
-        val totalWaterLitres =
-            response.sumOf { it.result[HydrationRecord.VOLUME_TOTAL]?.inLiters ?: 0.0 }
-        val averageWaterLitres = if (response.isEmpty()) null
-        else Volume.liters(totalWaterLitres / response.size)
-
-        val daysLogged = response.size
-        // TODO: calculate these values
-        val daysWithinCalorieGoal = 0
-        val daysProteinGoalMet = 0
+        val totalWaterMilliliters =
+            response.sumOf { it.result[HydrationRecord.VOLUME_TOTAL]?.inMilliliters ?: 0.0 }
+        val averageWaterMilliliters = if (response.isEmpty()) null
+        else Volume.milliliters(totalWaterMilliliters / response.size)
 
         return Nutrition(
             averageCalories = averageCalories,
             averageProtein = averageProteinGrams,
             averageCarbs = averageCarbsGrams,
             averageFat = averageFatGrams,
-            averageWater = averageWaterLitres,
-            daysLogged = daysLogged,
-            daysWithinCalorieGoal = daysWithinCalorieGoal,
-            daysProteinGoalMet = daysProteinGoalMet,
+            averageWater = averageWaterMilliliters,
+            daysLogged = response.size,
+            daysWithinCalorieGoal = if (userGoals.calorieGoal == null) null else response.count { item ->
+                item.result[NutritionRecord.ENERGY_TOTAL]?.inRange(userGoals.calorieGoal!!) == true
+            },
+            daysProteinGoalMet = if (userGoals.proteinGoal == null) null else response.count { item ->
+                item.result[NutritionRecord.PROTEIN_TOTAL]?.inRange(userGoals.proteinGoal!!) == true
+            },
+            daysCarbsGoalMet = if (userGoals.carbsGoal == null) null else response.count { item ->
+                item.result[NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL]?.inRange(userGoals.carbsGoal!!) == true
+            },
+            daysFatGoalMet = if (userGoals.fatGoal == null) null else response.count { item ->
+                item.result[NutritionRecord.TOTAL_FAT_TOTAL]?.inRange(userGoals.fatGoal!!) == true
+            },
+            daysWaterGoalMet = if (userGoals.waterGoal == null) null else response.count { item ->
+                (item.result[HydrationRecord.VOLUME_TOTAL]
+                    ?: Volume.milliliters(0.0)) >= userGoals.waterGoal!!
+            },
             units = units,
         )
     }
