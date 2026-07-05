@@ -32,6 +32,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,6 +41,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -66,6 +69,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val clipboard = LocalClipboard.current
 
     val repository: HealthRepository = remember { HealthConnectRepository(context) }
+
+    val scrollState = rememberScrollState()
+    var reportPosition by remember { mutableFloatStateOf(0f) }
 
     var report by remember { mutableStateOf<WeeklyReport?>(null) }
 
@@ -108,7 +114,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .imePadding()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.Top
     ) {
         Text(text = stringResource(R.string.hunger_level))
@@ -374,7 +380,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates ->
+                    reportPosition = coordinates.positionInParent().y
+                },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
@@ -383,6 +393,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     scope.launch {
                         report = null
                         report = repository.getWeeklyReport(userData)
+                        scrollState.animateScrollTo(reportPosition.toInt())
                     }
                 }) {
                 Text(stringResource(R.string.generate_weekly_report))
