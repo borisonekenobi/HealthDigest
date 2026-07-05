@@ -12,6 +12,7 @@ import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
+import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.grams
 import androidx.health.connect.client.units.kilocalories
@@ -162,7 +163,7 @@ class HealthConnectSource(context: Context, private val units: Units) {
             return Activity(null, null, null, null, null, units)
         }
 
-        val response = healthConnectManager.client.aggregateGroupByPeriod(
+        val aggregateResponse = healthConnectManager.client.aggregateGroupByPeriod(
             AggregateGroupByPeriodRequest(
                 metrics = setOf(
                     StepsRecord.COUNT_TOTAL,
@@ -174,16 +175,23 @@ class HealthConnectSource(context: Context, private val units: Units) {
             )
         )
 
-        val totalSteps = response.sumOf { it.result[StepsRecord.COUNT_TOTAL] ?: 0 }
-        val averageStepsPerDay = if (response.isEmpty()) 0 else totalSteps / response.size
-        val activeCalories = (response.sumOf {
+        val totalSteps = aggregateResponse.sumOf { it.result[StepsRecord.COUNT_TOTAL] ?: 0 }
+        val averageStepsPerDay = if (aggregateResponse.isEmpty()) 0 else totalSteps / aggregateResponse.size
+        val activeCalories = (aggregateResponse.sumOf {
             it.result[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories ?: 0.0
         }).kilocalories
-        val exerciseDuration = response.sumOf {
+        val exerciseDuration = aggregateResponse.sumOf {
             it.result[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL]?.toMinutes() ?: 0
         }
-        // TODO: calculate this value
-        val workoutCount = 0
+
+        val readRecordsResponse = healthConnectManager.client.readRecords(
+            ReadRecordsRequest(
+                recordType = ExerciseSessionRecord::class,
+                timeRangeFilter = TimeRangeFilter.between(lastWeek, today),
+            )
+        )
+
+        val workoutCount = readRecordsResponse.records.size
 
         return Activity(
             totalSteps = totalSteps,
