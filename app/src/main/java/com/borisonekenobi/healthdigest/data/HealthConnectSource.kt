@@ -81,9 +81,7 @@ class HealthConnectSource(context: Context, private val units: Units) {
 
     suspend fun getNutritionInformation(userGoals: GoalPreferences): Nutrition {
         if (!hasPermissions(setOf(NutritionRecord::class, HydrationRecord::class))) {
-            return Nutrition(
-                null, null, null, null, null, 0, null, null, null, null, null, units
-            )
+            return Nutrition(null, null, null, null, null, 0, null, null, null, null, null, units)
         }
 
         val response = healthConnectManager.client.aggregateGroupByPeriod(
@@ -100,30 +98,29 @@ class HealthConnectSource(context: Context, private val units: Units) {
             )
         )
 
+        if (response.isEmpty()) {
+            return Nutrition(null, null, null, null, null, 0, null, null, null, null, null, units)
+        }
+
         val totalCalories =
             response.sumOf { it.result[NutritionRecord.ENERGY_TOTAL]?.inKilocalories ?: 0.0 }
-        val averageCalories = if (response.isEmpty()) null
-        else (totalCalories / response.size).kilocalories
+        val averageCalories = (totalCalories / response.size).kilocalories
 
         val totalProteinGrams =
             response.sumOf { it.result[NutritionRecord.PROTEIN_TOTAL]?.inGrams ?: 0.0 }
-        val averageProteinGrams = if (response.isEmpty()) null
-        else (totalProteinGrams / response.size).grams
+        val averageProteinGrams = (totalProteinGrams / response.size).grams
 
         val totalCarbsGrams =
             response.sumOf { it.result[NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL]?.inGrams ?: 0.0 }
-        val averageCarbsGrams = if (response.isEmpty()) null
-        else (totalCarbsGrams / response.size).grams
+        val averageCarbsGrams = (totalCarbsGrams / response.size).grams
 
         val totalFatGrams =
             response.sumOf { it.result[NutritionRecord.TOTAL_FAT_TOTAL]?.inGrams ?: 0.0 }
-        val averageFatGrams = if (response.isEmpty()) null
-        else (totalFatGrams / response.size).grams
+        val averageFatGrams = (totalFatGrams / response.size).grams
 
         val totalWaterMilliliters =
             response.sumOf { it.result[HydrationRecord.VOLUME_TOTAL]?.inMilliliters ?: 0.0 }
-        val averageWaterMilliliters = if (response.isEmpty()) null
-        else (totalWaterMilliliters / response.size).milliliters
+        val averageWaterMilliliters = (totalWaterMilliliters / response.size).milliliters
 
         return Nutrition(
             averageCalories = averageCalories,
@@ -145,7 +142,8 @@ class HealthConnectSource(context: Context, private val units: Units) {
                 item.result[NutritionRecord.TOTAL_FAT_TOTAL]?.inRange(userGoals.fatGoal!!) == true
             },
             daysWaterGoalMet = if (userGoals.waterGoal == null) null else response.count { item ->
-                (item.result[HydrationRecord.VOLUME_TOTAL] ?: 0.milliliters) >= userGoals.waterGoal!!
+                (item.result[HydrationRecord.VOLUME_TOTAL]
+                    ?: 0.milliliters) >= userGoals.waterGoal!!
             },
             units = units,
         )
@@ -175,8 +173,12 @@ class HealthConnectSource(context: Context, private val units: Units) {
             )
         )
 
+        if (aggregateResponse.isEmpty()) {
+            return Activity(null, null, null, null, null, units)
+        }
+
         val totalSteps = aggregateResponse.sumOf { it.result[StepsRecord.COUNT_TOTAL] ?: 0 }
-        val averageStepsPerDay = if (aggregateResponse.isEmpty()) 0 else totalSteps / aggregateResponse.size
+        val averageStepsPerDay = totalSteps / aggregateResponse.size
         val activeCalories = (aggregateResponse.sumOf {
             it.result[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories ?: 0.0
         }).kilocalories
@@ -215,7 +217,6 @@ class HealthConnectSource(context: Context, private val units: Units) {
             AggregateGroupByPeriodRequest(
                 metrics = setOf(
                     SleepSessionRecord.SLEEP_DURATION_TOTAL,
-                    HeartRateRecord.MEASUREMENTS_COUNT,
                     HeartRateRecord.BPM_AVG,
                 ),
                 timeRangeFilter = TimeRangeFilter.between(lastWeek, today),
@@ -223,14 +224,16 @@ class HealthConnectSource(context: Context, private val units: Units) {
             )
         )
 
+        if (response.isEmpty()) {
+            return Recovery(null, null)
+        }
+
         val totalSleep = response.sumOf {
             it.result[SleepSessionRecord.SLEEP_DURATION_TOTAL]?.toMinutes() ?: 0
         }
-        val averageSleep =
-            if (response.isEmpty()) 0.minutes else (totalSleep / response.size).minutes
-        val heartRateCount = response.sumOf { it.result[HeartRateRecord.MEASUREMENTS_COUNT] ?: 0 }
+        val averageSleep = (totalSleep / response.size).minutes
         val averageHeartRate =
-            response.sumOf { it.result[HeartRateRecord.BPM_AVG] ?: 0 } / heartRateCount
+            response.sumOf { it.result[HeartRateRecord.BPM_AVG] ?: 0 } / response.size
 
         return Recovery(
             averageSleep = averageSleep,
