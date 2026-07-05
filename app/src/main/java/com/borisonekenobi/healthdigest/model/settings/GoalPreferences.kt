@@ -3,6 +3,7 @@ package com.borisonekenobi.healthdigest.model.settings
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Volume
+import androidx.health.connect.client.units.kilocalories
 
 data class GoalPreferences(
     var weightGoal: WeightGoal,
@@ -16,12 +17,12 @@ data class GoalPreferences(
 )
 
 enum class WeightGoal(val value: Energy) {
-    LOSE_QUICKLY(Energy.kilocalories(-750.0)),
-    LOSE(Energy.kilocalories(-500.0)),
-    LOSE_SLOWLY(Energy.kilocalories(-250.0)),
-    MAINTAIN(Energy.kilocalories(0.0)),
-    GAIN_SLOWLY(Energy.kilocalories(250.0)),
-    GAIN(Energy.kilocalories(500.0)),
+    LOSE_QUICKLY((-750.0).kilocalories),
+    LOSE((-500.0).kilocalories),
+    LOSE_SLOWLY((-250.0).kilocalories),
+    MAINTAIN(0.0.kilocalories),
+    GAIN_SLOWLY(250.0.kilocalories),
+    GAIN(500.0.kilocalories),
 }
 
 data class Range<T : Comparable<T>>(
@@ -31,5 +32,5 @@ data class Range<T : Comparable<T>>(
 
 fun <T : Comparable<T>> T.inRange(range: Range<T>): Boolean {
     return (range.lowerBound == null || this >= range.lowerBound!!) &&
-            (range.upperBound == null || this <= range.upperBound!!)
+           (range.upperBound == null || this <= range.upperBound!!)
 }

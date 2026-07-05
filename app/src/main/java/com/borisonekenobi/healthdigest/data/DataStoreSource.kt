@@ -9,6 +9,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Volume
+import androidx.health.connect.client.units.grams
+import androidx.health.connect.client.units.kilocalories
+import androidx.health.connect.client.units.milliliters
 import com.borisonekenobi.healthdigest.model.settings.GoalPreferences
 import com.borisonekenobi.healthdigest.model.settings.Range
 import com.borisonekenobi.healthdigest.model.settings.PersonalInformation
@@ -111,19 +114,19 @@ class DataStoreSource(private val context: Context) {
     }
 
     private fun getEnergy(preferences: Preferences, key: PreferenceKeys): Energy? = try {
-        Energy.kilocalories((preferences[key.value] ?: "").toDouble())
+        (preferences[key.value] ?: "").toDouble().kilocalories
     } catch (_: Exception) {
         null
     }
 
     private fun getMass(preferences: Preferences, key: PreferenceKeys): Mass? = try {
-        Mass.grams((preferences[key.value] ?: "").toDouble())
+        (preferences[key.value] ?: "").toDouble().grams
     } catch (_: Exception) {
         null
     }
 
     private fun getVolume(preferences: Preferences, key: PreferenceKeys): Volume? = try {
-        Volume.milliliters((preferences[key.value] ?: "").toDouble())
+        (preferences[key.value] ?: "").toDouble().milliliters
     } catch (_: Exception) {
         null
     }

@@ -13,9 +13,10 @@ import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
 import androidx.health.connect.client.time.TimeRangeFilter
-import androidx.health.connect.client.units.Energy
-import androidx.health.connect.client.units.Mass
-import androidx.health.connect.client.units.Volume
+import androidx.health.connect.client.units.grams
+import androidx.health.connect.client.units.kilocalories
+import androidx.health.connect.client.units.kilograms
+import androidx.health.connect.client.units.milliliters
 import com.borisonekenobi.healthdigest.HealthConnectManager
 import com.borisonekenobi.healthdigest.model.Activity
 import com.borisonekenobi.healthdigest.model.BodyMetrics
@@ -25,10 +26,10 @@ import com.borisonekenobi.healthdigest.model.WaistFit
 import com.borisonekenobi.healthdigest.model.settings.GoalPreferences
 import com.borisonekenobi.healthdigest.model.settings.Units
 import com.borisonekenobi.healthdigest.model.settings.inRange
-import java.time.Duration
 import java.time.LocalDateTime
 import java.time.Period
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.minutes
 
 class HealthConnectSource(context: Context, private val units: Units) {
     private val healthConnectManager = HealthConnectManager(context)
@@ -66,7 +67,7 @@ class HealthConnectSource(context: Context, private val units: Units) {
 
         val previousWeight = response.lastOrNull()?.result?.get(WeightRecord.WEIGHT_AVG)
         val weightChange = if (currentWeight == null || previousWeight == null) null
-        else Mass.kilograms(currentWeight.inKilograms - previousWeight.inKilograms)
+        else (currentWeight.inKilograms - previousWeight.inKilograms).kilograms
 
         return BodyMetrics(
             currentWeight = currentWeight,
@@ -101,27 +102,27 @@ class HealthConnectSource(context: Context, private val units: Units) {
         val totalCalories =
             response.sumOf { it.result[NutritionRecord.ENERGY_TOTAL]?.inKilocalories ?: 0.0 }
         val averageCalories = if (response.isEmpty()) null
-        else Energy.kilocalories(totalCalories / response.size)
+        else (totalCalories / response.size).kilocalories
 
         val totalProteinGrams =
             response.sumOf { it.result[NutritionRecord.PROTEIN_TOTAL]?.inGrams ?: 0.0 }
         val averageProteinGrams = if (response.isEmpty()) null
-        else Mass.grams(totalProteinGrams / response.size)
+        else (totalProteinGrams / response.size).grams
 
         val totalCarbsGrams =
             response.sumOf { it.result[NutritionRecord.TOTAL_CARBOHYDRATE_TOTAL]?.inGrams ?: 0.0 }
         val averageCarbsGrams = if (response.isEmpty()) null
-        else Mass.grams(totalCarbsGrams / response.size)
+        else (totalCarbsGrams / response.size).grams
 
         val totalFatGrams =
             response.sumOf { it.result[NutritionRecord.TOTAL_FAT_TOTAL]?.inGrams ?: 0.0 }
         val averageFatGrams = if (response.isEmpty()) null
-        else Mass.grams(totalFatGrams / response.size)
+        else (totalFatGrams / response.size).grams
 
         val totalWaterMilliliters =
             response.sumOf { it.result[HydrationRecord.VOLUME_TOTAL]?.inMilliliters ?: 0.0 }
         val averageWaterMilliliters = if (response.isEmpty()) null
-        else Volume.milliliters(totalWaterMilliliters / response.size)
+        else (totalWaterMilliliters / response.size).milliliters
 
         return Nutrition(
             averageCalories = averageCalories,
@@ -143,8 +144,7 @@ class HealthConnectSource(context: Context, private val units: Units) {
                 item.result[NutritionRecord.TOTAL_FAT_TOTAL]?.inRange(userGoals.fatGoal!!) == true
             },
             daysWaterGoalMet = if (userGoals.waterGoal == null) null else response.count { item ->
-                (item.result[HydrationRecord.VOLUME_TOTAL]
-                    ?: Volume.milliliters(0.0)) >= userGoals.waterGoal!!
+                (item.result[HydrationRecord.VOLUME_TOTAL] ?: 0.milliliters) >= userGoals.waterGoal!!
             },
             units = units,
         )
@@ -176,9 +176,9 @@ class HealthConnectSource(context: Context, private val units: Units) {
 
         val totalSteps = response.sumOf { it.result[StepsRecord.COUNT_TOTAL] ?: 0 }
         val averageStepsPerDay = if (response.isEmpty()) 0 else totalSteps / response.size
-        val activeCalories = Energy.kilocalories(response.sumOf {
+        val activeCalories = (response.sumOf {
             it.result[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories ?: 0.0
-        })
+        }).kilocalories
         val exerciseDuration = response.sumOf {
             it.result[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL]?.toMinutes() ?: 0
         }
@@ -219,7 +219,7 @@ class HealthConnectSource(context: Context, private val units: Units) {
             it.result[SleepSessionRecord.SLEEP_DURATION_TOTAL]?.toMinutes() ?: 0
         }
         val averageSleep =
-            if (response.isEmpty()) Duration.ofMinutes(0) else Duration.ofMinutes(totalSleep / response.size)
+            if (response.isEmpty()) 0.minutes else (totalSleep / response.size).minutes
         val heartRateCount = response.sumOf { it.result[HeartRateRecord.MEASUREMENTS_COUNT] ?: 0 }
         val averageHeartRate =
             response.sumOf { it.result[HeartRateRecord.BPM_AVG] ?: 0 } / heartRateCount

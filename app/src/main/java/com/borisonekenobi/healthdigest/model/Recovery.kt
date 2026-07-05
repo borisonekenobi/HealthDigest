@@ -1,8 +1,7 @@
 package com.borisonekenobi.healthdigest.model
 
 import android.annotation.SuppressLint
-import java.time.Duration
-import kotlin.time.toKotlinDuration
+import kotlin.time.Duration
 
 data class Recovery(
     val averageSleep: Duration?,
@@ -10,7 +9,7 @@ data class Recovery(
 ) {
     @SuppressLint("DefaultLocale")
     override fun toString(): String {
-        val averageSleep = averageSleep?.toKotlinDuration()?.toComponents { hours, minutes, _, _ ->
+        val averageSleep = averageSleep?.toComponents { hours, minutes, _, _ ->
             String.format("%dh%dm", hours, minutes)
         }
 

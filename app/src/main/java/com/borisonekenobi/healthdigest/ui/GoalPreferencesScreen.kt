@@ -38,8 +38,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.health.connect.client.units.Mass
-import androidx.health.connect.client.units.Volume
+import androidx.health.connect.client.units.fluidOuncesUs
+import androidx.health.connect.client.units.grams
+import androidx.health.connect.client.units.milliliters
+import androidx.health.connect.client.units.ounces
 import com.borisonekenobi.healthdigest.data.DataStoreSource
 import com.borisonekenobi.healthdigest.data.PreferenceKeys
 import com.borisonekenobi.healthdigest.model.settings.Range
@@ -277,8 +279,8 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                         val doubleValue = newValue.toDoubleOrNull()
                         val gramsValue = if (doubleValue == null) "" else {
                             when (systemPreferences.units) {
-                                Units.METRIC -> Mass.grams(doubleValue).inGrams
-                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                                Units.METRIC -> doubleValue.grams.inGrams
+                                Units.IMPERIAL -> doubleValue.ounces.inGrams
                             }.toString()
                         }
                         dataStoreSource.saveUserPreference(
@@ -295,8 +297,8 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                         val doubleValue = newValue.toDoubleOrNull()
                         val gramsValue = if (doubleValue == null) "" else {
                             when (systemPreferences.units) {
-                                Units.METRIC -> Mass.grams(doubleValue).inGrams
-                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                                Units.METRIC -> doubleValue.grams.inGrams
+                                Units.IMPERIAL -> doubleValue.ounces.inGrams
                             }.toString()
                         }
                         dataStoreSource.saveUserPreference(
@@ -322,8 +324,8 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                         val doubleValue = newValue.toDoubleOrNull()
                         val gramsValue = if (doubleValue == null) "" else {
                             when (systemPreferences.units) {
-                                Units.METRIC -> Mass.grams(doubleValue).inGrams
-                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                                Units.METRIC -> doubleValue.grams.inGrams
+                                Units.IMPERIAL -> doubleValue.ounces.inGrams
                             }.toString()
                         }
                         dataStoreSource.saveUserPreference(
@@ -340,8 +342,8 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                         val doubleValue = newValue.toDoubleOrNull()
                         val gramsValue = if (doubleValue == null) "" else {
                             when (systemPreferences.units) {
-                                Units.METRIC -> Mass.grams(doubleValue).inGrams
-                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                                Units.METRIC -> doubleValue.grams.inGrams
+                                Units.IMPERIAL -> doubleValue.ounces.inGrams
                             }.toString()
                         }
                         dataStoreSource.saveUserPreference(
@@ -367,8 +369,8 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                         val doubleValue = newValue.toDoubleOrNull()
                         val gramsValue = if (doubleValue == null) "" else {
                             when (systemPreferences.units) {
-                                Units.METRIC -> Mass.grams(doubleValue).inGrams
-                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                                Units.METRIC -> doubleValue.grams.inGrams
+                                Units.IMPERIAL -> doubleValue.ounces.inGrams
                             }.toString()
                         }
                         dataStoreSource.saveUserPreference(
@@ -385,8 +387,8 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                         val doubleValue = newValue.toDoubleOrNull()
                         val gramsValue = if (doubleValue == null) "" else {
                             when (systemPreferences.units) {
-                                Units.METRIC -> Mass.grams(doubleValue).inGrams
-                                Units.IMPERIAL -> Mass.ounces(doubleValue).inGrams
+                                Units.METRIC -> doubleValue.grams.inGrams
+                                Units.IMPERIAL -> doubleValue.ounces.inGrams
                             }.toString()
                         }
                         dataStoreSource.saveUserPreference(
@@ -430,8 +432,8 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                         val doubleValue = newValue.toDoubleOrNull()
                         val mlValue = if (doubleValue == null) "" else {
                             when (systemPreferences.units) {
-                                Units.METRIC -> Volume.milliliters(doubleValue).inMilliliters
-                                Units.IMPERIAL -> Volume.fluidOuncesUs(doubleValue).inMilliliters
+                                Units.METRIC -> doubleValue.milliliters.inMilliliters
+                                Units.IMPERIAL -> doubleValue.fluidOuncesUs.inMilliliters
                             }.toString()
                         }
                         dataStoreSource.saveUserPreference(PreferenceKeys.WATER_GOAL, mlValue)
