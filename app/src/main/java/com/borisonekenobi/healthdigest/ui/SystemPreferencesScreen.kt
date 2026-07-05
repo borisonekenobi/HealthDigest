@@ -31,10 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.data.DataStoreSource
 import com.borisonekenobi.healthdigest.data.PreferenceKeys
 import com.borisonekenobi.healthdigest.model.settings.SystemPreferences
@@ -62,7 +64,7 @@ fun SystemPreferencesScreen(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top
     ) {
-        Text(text = "Theme")
+        Text(text = stringResource(R.string.theme))
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -110,7 +112,7 @@ fun SystemPreferencesScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(text = "Units")
+        Text(text = stringResource(R.string.units))
 
         Spacer(modifier = Modifier.height(8.dp))
 

@@ -10,8 +10,10 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.model.settings.Range
 
 @Composable
@@ -31,7 +33,7 @@ fun GoalNumberField(
             onValueChange = onLowerBoundChange,
             modifier = Modifier.weight(1f),
             enabled = enabled,
-            label = { Text("Min $goalText") },
+            label = { Text(stringResource(R.string.min_goal, goalText)) },
             suffix = { Text(units) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(
@@ -53,7 +55,7 @@ fun GoalNumberField(
             onValueChange = onUpperBoundChange,
             modifier = Modifier.weight(1f),
             enabled = enabled,
-            label = { Text("Max $goalText") },
+            label = { Text(stringResource(R.string.max_goal, goalText)) },
             suffix = { Text(units) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(

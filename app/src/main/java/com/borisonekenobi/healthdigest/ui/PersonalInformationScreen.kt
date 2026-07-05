@@ -34,10 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.data.DataStoreSource
 import com.borisonekenobi.healthdigest.data.PreferenceKeys
 import com.borisonekenobi.healthdigest.model.settings.PersonalInformation
@@ -55,36 +57,38 @@ fun PersonalInformationScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     val dataStoreSource = remember { DataStoreSource(context) }
-    val personalInformationNullable by dataStoreSource.personalInformationFlow.collectAsState(initial = null)
+    val personalInformationNullable by dataStoreSource.personalInformationFlow.collectAsState(
+        initial = null
+    )
     val personalInformation = personalInformationNullable ?: PersonalInformation(null, null)
 
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = personalInformation.birthDate?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
+        initialSelectedDateMillis = personalInformation.birthDate?.atStartOfDay(ZoneOffset.UTC)
+            ?.toInstant()?.toEpochMilli()
     )
 
     if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
-                        scope.launch {
-                            dataStoreSource.saveUserPreference(PreferenceKeys.BIRTH_DATE, date.toString())
-                        }
+        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                    scope.launch {
+                        dataStoreSource.saveUserPreference(
+                            PreferenceKeys.BIRTH_DATE,
+                            date.toString()
+                        )
                     }
-                    showDatePicker = false
-                }) {
-                    Text("OK")
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
+                showDatePicker = false
+            }) {
+                Text(stringResource(R.string.ok))
             }
-        ) {
+        }, dismissButton = {
+            TextButton(onClick = { showDatePicker = false }) {
+                Text(stringResource(R.string.cancel))
+            }
+        }) {
             DatePicker(state = datePickerState)
         }
     }
@@ -94,15 +98,14 @@ fun PersonalInformationScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .imePadding()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Top
+            .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.Top
     ) {
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = "Sex")
+            Text(text = stringResource(R.string.sex))
 
             ClearButton(personalInformation.sex != null) {
                 scope.launch { dataStoreSource.saveUserPreference(PreferenceKeys.SEX, "") }
@@ -153,7 +156,7 @@ fun PersonalInformationScreen(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = "Birth Date")
+            Text(text = stringResource(R.string.birth_date))
 
             ClearButton(personalInformation.birthDate != null) {
                 scope.launch { dataStoreSource.saveUserPreference(PreferenceKeys.BIRTH_DATE, "") }
@@ -173,7 +176,8 @@ fun PersonalInformationScreen(modifier: Modifier = Modifier) {
         ) {
             val formatter = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL) }
             Text(
-                text = personalInformation.birthDate?.format(formatter) ?: "Set Birth Date",
+                text = personalInformation.birthDate?.format(formatter)
+                    ?: stringResource(R.string.set_birth_date),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Start,
                 style = MaterialTheme.typography.bodyLarge

@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +43,7 @@ import androidx.health.connect.client.units.fluidOuncesUs
 import androidx.health.connect.client.units.grams
 import androidx.health.connect.client.units.milliliters
 import androidx.health.connect.client.units.ounces
+import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.data.DataStoreSource
 import com.borisonekenobi.healthdigest.data.PreferenceKeys
 import com.borisonekenobi.healthdigest.model.settings.Range
@@ -172,7 +174,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
     ) {
-        Text("Weight Goal")
+        Text(stringResource(R.string.weight_goal))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -220,11 +222,11 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(8.dp))
 
-        Text("Nutrition")
+        Text(stringResource(R.string.nutrition))
 
         Spacer(Modifier.height(8.dp))
 
-        ToggleButton("Auto Nutrition Goals", autoNutritionGoals) {
+        ToggleButton(stringResource(R.string.auto_nutrition_goals), autoNutritionGoals) {
             autoNutritionGoals = it
             scope.launch {
                 dataStoreSource.saveUserPreference(
@@ -237,7 +239,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
         GoalNumberField(
             if (autoNutritionGoals) autoCalorieRange else calorieRange,
             !autoNutritionGoals,
-            "Calorie",
+            stringResource(R.string.calorie),
             energyUnits(),
             onLowerBoundChange = { newValue ->
                 if (isValidNumberInput(newValue)) {
@@ -270,7 +272,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
         GoalNumberField(
             if (autoNutritionGoals) autoProteinRange else proteinRange,
             !autoNutritionGoals,
-            "Protein",
+            stringResource(R.string.protein),
             smallMassUnits(systemPreferences.units),
             onLowerBoundChange = { newValue ->
                 if (isValidNumberInput(newValue)) {
@@ -315,7 +317,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
         GoalNumberField(
             if (autoNutritionGoals) autoCarbsRange else carbsRange,
             !autoNutritionGoals,
-            "Carbs",
+            stringResource(R.string.carbs),
             smallMassUnits(systemPreferences.units),
             onLowerBoundChange = { newValue ->
                 if (isValidNumberInput(newValue)) {
@@ -360,7 +362,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
         GoalNumberField(
             if (autoNutritionGoals) autoFatRange else fatRange,
             !autoNutritionGoals,
-            "Fat",
+            stringResource(R.string.fat),
             smallMassUnits(systemPreferences.units),
             onLowerBoundChange = { newValue ->
                 if (isValidNumberInput(newValue)) {
@@ -409,11 +411,11 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(8.dp))
 
-        Text("Hydration")
+        Text(stringResource(R.string.hydration))
 
         Spacer(Modifier.height(8.dp))
 
-        ToggleButton("Auto Hydration Goals", autoHydrationGoals) {
+        ToggleButton(stringResource(R.string.auto_hydration_goals), autoHydrationGoals) {
             autoHydrationGoals = it
             scope.launch {
                 dataStoreSource.saveUserPreference(
@@ -442,7 +444,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = !autoHydrationGoals,
-            label = { Text("Water goal (optional)") },
+            label = { Text(stringResource(R.string.water_goal_optional)) },
             suffix = { Text(volumeUnits(systemPreferences.units)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(8.dp),

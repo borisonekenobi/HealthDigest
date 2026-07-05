@@ -26,9 +26,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.data.DataStoreSource
 import com.borisonekenobi.healthdigest.data.PreferenceKeys
 import com.borisonekenobi.healthdigest.model.settings.ReportPreferences
@@ -62,7 +64,7 @@ fun ReportPreferencesScreen(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top
     ) {
-        Text(text = "Messages")
+        Text(text = stringResource(R.string.messages))
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -75,7 +77,7 @@ fun ReportPreferencesScreen(modifier: Modifier = Modifier) {
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Start Message (optional)") },
+            label = { Text(stringResource(R.string.start_message_optional)) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -97,7 +99,7 @@ fun ReportPreferencesScreen(modifier: Modifier = Modifier) {
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("End Message (optional)") },
+            label = { Text(stringResource(R.string.end_message_optional)) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(

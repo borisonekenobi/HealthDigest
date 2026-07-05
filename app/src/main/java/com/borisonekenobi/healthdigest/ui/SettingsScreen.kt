@@ -13,54 +13,61 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import com.borisonekenobi.healthdigest.R
 
 @Composable
 fun SettingsScreen(navController: NavController, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         ListItem(
-            headlineContent = { Text("Personal Information") },
+            headlineContent = { Text(stringResource(R.string.personal_information)) },
             modifier = Modifier.clickable { navController.navigate("personal-information") },
             leadingContent = {
                 Icon(
-                    imageVector = Icons.Filled.Person, contentDescription = "Personal Information"
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = stringResource(R.string.personal_information)
                 )
             })
 
         ListItem(
-            headlineContent = { Text("Goal Preferences") },
+            headlineContent = { Text(stringResource(R.string.goal_preferences)) },
             modifier = Modifier.clickable { navController.navigate("goal-preferences") },
             leadingContent = {
                 Icon(
-                    imageVector = Icons.Filled.Flag, contentDescription = "Goal Preferences"
+                    imageVector = Icons.Filled.Flag,
+                    contentDescription = stringResource(R.string.goal_preferences)
                 )
             })
 
         ListItem(
-            headlineContent = { Text("Report Preferences") },
+            headlineContent = { Text(stringResource(R.string.report_preferences)) },
             modifier = Modifier.clickable { navController.navigate("report-preferences") },
             leadingContent = {
                 Icon(
-                    imageVector = Icons.Filled.Analytics, contentDescription = "Report Preferences"
+                    imageVector = Icons.Filled.Analytics,
+                    contentDescription = stringResource(R.string.report_preferences)
                 )
             })
 
         ListItem(
-            headlineContent = { Text("System Preferences") },
+            headlineContent = { Text(stringResource(R.string.system_preferences)) },
             modifier = Modifier.clickable { navController.navigate("system-preferences") },
             leadingContent = {
                 Icon(
-                    imageVector = Icons.Filled.Settings, contentDescription = "System Preferences"
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.system_preferences)
                 )
             })
 
         ListItem(
-            headlineContent = { Text("Health Connect") },
+            headlineContent = { Text(stringResource(R.string.health_connect)) },
             modifier = Modifier.clickable { navController.navigate("health-connect") },
             leadingContent = {
                 Icon(
-                    imageVector = Icons.Filled.Sync, contentDescription = "Health Connect"
+                    imageVector = Icons.Filled.Sync,
+                    contentDescription = stringResource(R.string.health_connect)
                 )
             })
     }

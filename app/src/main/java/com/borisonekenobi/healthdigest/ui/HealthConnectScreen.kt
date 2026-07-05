@@ -26,9 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.PermissionController
+import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.data.HealthConnectPermissions
 import com.borisonekenobi.healthdigest.data.HealthPermissions
 import kotlinx.coroutines.launch
@@ -43,6 +45,9 @@ fun HealthConnectScreen(modifier: Modifier = Modifier) {
         contract = PermissionController.createRequestPermissionResultContract()
     ) { _ -> }
 
+    val allPermissionsGrantedMsg = stringResource(R.string.all_permissions_granted)
+    val notAllPermissionsGrantedMsg = stringResource(R.string.not_all_permissions_granted)
+
     var allPermissionsGranted by remember { mutableStateOf<Boolean?>(null) }
     LaunchedEffect(Unit) {
         allPermissionsGranted = permission.hasAllPermissions()
@@ -53,8 +58,8 @@ fun HealthConnectScreen(modifier: Modifier = Modifier) {
         allPermissionsGranted = permission.hasAllPermissions()
         Toast.makeText(
             context, when (allPermissionsGranted) {
-                true -> "All permissions granted"
-                else -> "Not all permissions granted"
+                true -> allPermissionsGrantedMsg
+                else -> notAllPermissionsGrantedMsg
             }, Toast.LENGTH_SHORT
         ).show()
     }
@@ -74,7 +79,7 @@ fun HealthConnectScreen(modifier: Modifier = Modifier) {
                 permission.getPermissions(permissionLauncher)
                 scope.launch { checkPermissions() }
             }) {
-                Text("Connect Health Data")
+                Text(stringResource(R.string.connect_health_data))
             }
 
             if (allPermissionsGranted == null) {
@@ -88,7 +93,7 @@ fun HealthConnectScreen(modifier: Modifier = Modifier) {
                         imageVector = when (allPermissionsGranted) {
                             true -> Icons.Default.CheckCircleOutline
                             else -> Icons.Default.ErrorOutline
-                        }, contentDescription = "Permission Status"
+                        }, contentDescription = stringResource(R.string.permission_status)
                     )
                 }
             }

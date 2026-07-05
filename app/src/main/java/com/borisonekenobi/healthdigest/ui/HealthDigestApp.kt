@@ -20,10 +20,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.data.DataStoreSource
 import com.borisonekenobi.healthdigest.model.settings.SystemPreferences
 import com.borisonekenobi.healthdigest.model.settings.Theme
@@ -58,9 +60,9 @@ fun HealthDigestApp(startDestination: String = "main") {
                 composable("main") {
                     Scaffold(
                         topBar = {
-                            TopAppBar(title = { Text("Health Digest") }, actions = {
+                            TopAppBar(title = { Text(stringResource(R.string.app_name)) }, actions = {
                                 IconButton(onClick = { navController.navigate("settings") }) {
-                                    Icon(Icons.Default.Settings, contentDescription = "Settings")
+                                    Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                                 }
                             })
                         }) { innerPadding ->
@@ -70,11 +72,11 @@ fun HealthDigestApp(startDestination: String = "main") {
                 composable("settings") {
                     Scaffold(
                         topBar = {
-                            TopAppBar(title = { Text("Settings") }, navigationIcon = {
+                            TopAppBar(title = { Text(stringResource(R.string.settings)) }, navigationIcon = {
                                 IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
+                                        contentDescription = stringResource(R.string.back)
                                     )
                                 }
                             })
@@ -85,11 +87,11 @@ fun HealthDigestApp(startDestination: String = "main") {
                 composable("personal-information") {
                     Scaffold(
                         topBar = {
-                            TopAppBar(title = { Text("Personal Information") }, navigationIcon = {
+                            TopAppBar(title = { Text(stringResource(R.string.personal_information)) }, navigationIcon = {
                                 IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
+                                        contentDescription = stringResource(R.string.back)
                                     )
                                 }
                             })
@@ -100,11 +102,11 @@ fun HealthDigestApp(startDestination: String = "main") {
                 composable("goal-preferences") {
                     Scaffold(
                         topBar = {
-                            TopAppBar(title = { Text("Goal Preferences") }, navigationIcon = {
+                            TopAppBar(title = { Text(stringResource(R.string.goal_preferences)) }, navigationIcon = {
                                 IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
+                                        contentDescription = stringResource(R.string.back)
                                     )
                                 }
                             })
@@ -115,11 +117,11 @@ fun HealthDigestApp(startDestination: String = "main") {
                 composable("report-preferences") {
                     Scaffold(
                         topBar = {
-                            TopAppBar(title = { Text("Report Preferences") }, navigationIcon = {
+                            TopAppBar(title = { Text(stringResource(R.string.report_preferences)) }, navigationIcon = {
                                 IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
+                                        contentDescription = stringResource(R.string.back)
                                     )
                                 }
                             })
@@ -130,11 +132,11 @@ fun HealthDigestApp(startDestination: String = "main") {
                 composable("system-preferences") {
                     Scaffold(
                         topBar = {
-                            TopAppBar(title = { Text("System Preferences") }, navigationIcon = {
+                            TopAppBar(title = { Text(stringResource(R.string.system_preferences)) }, navigationIcon = {
                                 IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
+                                        contentDescription = stringResource(R.string.back)
                                     )
                                 }
                             })
@@ -145,11 +147,11 @@ fun HealthDigestApp(startDestination: String = "main") {
                 composable("health-connect") {
                     Scaffold(
                         topBar = {
-                            TopAppBar(title = { Text("Health Connect") }, navigationIcon = {
+                            TopAppBar(title = { Text(stringResource(R.string.health_connect)) }, navigationIcon = {
                                 IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
+                                        contentDescription = stringResource(R.string.back)
                                     )
                                 }
                             })

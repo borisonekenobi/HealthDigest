@@ -15,8 +15,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Button
@@ -43,11 +43,13 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.data.HealthConnectRepository
 import com.borisonekenobi.healthdigest.data.HealthRepository
 import com.borisonekenobi.healthdigest.model.EnergyLevel
@@ -109,7 +111,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Top
     ) {
-        Text(text = "Hunger Level")
+        Text(text = stringResource(R.string.hunger_level))
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -155,7 +157,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .offset(y = (-1).dp),
-            placeholder = { Text("Comments (optional)") },
+            placeholder = { Text(stringResource(R.string.comments_optional)) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -168,7 +170,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = "Energy Level")
+        Text(text = stringResource(R.string.energy_level))
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -214,7 +216,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .offset(y = (-1).dp),
-            placeholder = { Text("Comments (optional)") },
+            placeholder = { Text(stringResource(R.string.comments_optional)) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -227,7 +229,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = "Clothes/Waist Fit")
+        Text(text = stringResource(R.string.clothes_waist_fit))
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -269,7 +271,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = "Health Details")
+        Text(text = stringResource(R.string.health_details))
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -296,7 +298,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 contentPadding = PaddingValues(0.dp),
             ) {
                 Text(
-                    text = "Pain or Injury", style = MaterialTheme.typography.labelSmall
+                    text = stringResource(R.string.pain_or_injury),
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
 
@@ -318,7 +321,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Text(
-                    text = "Illness", style = MaterialTheme.typography.labelSmall
+                    text = stringResource(R.string.illness),
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
         }
@@ -332,7 +336,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .offset(y = (-1).dp),
-            placeholder = { Text("Health notes (e.g. knee pain, cold symptoms)") },
+            placeholder = { Text(stringResource(R.string.health_notes_placeholder)) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -349,7 +353,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             value = weeklyNotes,
             onValueChange = { weeklyNotes = it },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Additional notes (optional)") },
+            label = { Text(stringResource(R.string.additional_notes_optional)) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -377,16 +381,17 @@ fun MainScreen(modifier: Modifier = Modifier) {
             Button(
                 onClick = {
                     scope.launch {
+                        report = null
                         report = repository.getWeeklyReport(userData)
                     }
-                }
-            ) {
-                Text("Generate Weekly Report")
+                }) {
+                Text(stringResource(R.string.generate_weekly_report))
             }
 
+            val healthReportLabel = stringResource(R.string.health_report_label)
             IconButton(
                 onClick = {
-                    val clipData = ClipData.newPlainText("Health Report", report?.toString())
+                    val clipData = ClipData.newPlainText(healthReportLabel, report?.toString())
                     scope.launch {
                         clipboard.setClipEntry(ClipEntry(clipData))
                     }
@@ -394,7 +399,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 enabled = report != null,
             ) {
                 Icon(
-                    imageVector = Icons.Default.ContentCopy, contentDescription = "Copy Report"
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = stringResource(R.string.copy_report)
                 )
             }
         }
@@ -408,8 +414,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         ) {
             Text(
-                text = report?.toString() ?: "",
-                modifier = Modifier
+                text = report?.toString() ?: "", modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
             )
