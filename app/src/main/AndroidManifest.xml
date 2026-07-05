@@ -46,6 +46,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.HealthDigest"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -57,7 +58,8 @@
 
         <activity
             android:name=".PermissionsRationaleActivity"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
