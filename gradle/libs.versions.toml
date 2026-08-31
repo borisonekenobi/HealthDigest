@@ -8,7 +8,7 @@ lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 kotlin = "2.4.0"
 composeBom = "2026.06.01"
-navigationCompose = "2.9.8"
+navigationCompose = "2.10.0"
 datastore = "1.2.1"
 healthConnect = "1.1.0"
 
