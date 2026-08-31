@@ -7,6 +7,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
@@ -16,6 +17,7 @@ import androidx.health.connect.client.records.WeightRecord
 class HealthConnectPermissions(context: Context) : HealthPermissions {
     private val client by lazy { HealthConnectClient.getOrCreate(context) }
     private val permissions = setOf(
+        HealthPermission.getReadPermission(HeightRecord::class),
         HealthPermission.getReadPermission(WeightRecord::class),
         HealthPermission.getReadPermission(NutritionRecord::class),
         HealthPermission.getReadPermission(HydrationRecord::class),

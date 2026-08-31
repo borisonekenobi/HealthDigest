@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.borisonekenobi.healthdigest"
-        minSdk = 26
+        minSdk = 34
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -45,9 +45,7 @@ dependencies {
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
-    // TODO: Update dependency when I get a new phone
-    //noinspection UseTomlInstead
-    implementation("androidx.health.connect:connect-client:1.1.0")
+    implementation(libs.androidx.health.connect)
     implementation(libs.compose.material.icons)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
