@@ -48,25 +48,22 @@ class HealthConnectSource(context: Context, private val units: Units) {
             )
         }
 
-        var response = healthConnectManager.client.aggregateGroupByPeriod(
-            AggregateGroupByPeriodRequest(
-                metrics = setOf(WeightRecord.WEIGHT_AVG),
+        val currentWeightResponse = healthConnectManager.client.readRecords(
+            ReadRecordsRequest(
+                recordType = WeightRecord::class,
                 timeRangeFilter = TimeRangeFilter.after(today),
-                timeRangeSlicer = Period.ofDays(1),
             )
         )
+        val currentWeight = currentWeightResponse.records.lastOrNull()?.weight
 
-        val currentWeight = response.lastOrNull()?.result?.get(WeightRecord.WEIGHT_AVG)
-
-        response = healthConnectManager.client.aggregateGroupByPeriod(
-            AggregateGroupByPeriodRequest(
-                metrics = setOf(WeightRecord.WEIGHT_AVG),
+        val previousWeightResponse = healthConnectManager.client.readRecords(
+            ReadRecordsRequest(
+                recordType = WeightRecord::class,
                 timeRangeFilter = TimeRangeFilter.between(lastLastWeek, today),
-                timeRangeSlicer = Period.ofDays(1),
             )
         )
+        val previousWeight = previousWeightResponse.records.lastOrNull()?.weight
 
-        val previousWeight = response.lastOrNull()?.result?.get(WeightRecord.WEIGHT_AVG)
         val weightChange = if (currentWeight == null || previousWeight == null) null
         else (currentWeight.inKilograms - previousWeight.inKilograms).kilograms
 

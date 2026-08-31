@@ -5,11 +5,14 @@ import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Volume
 import com.borisonekenobi.healthdigest.model.settings.Units
 
-fun convertBig(value: Mass?, units: Units): String {
+fun convertBig(value: Mass?, units: Units, showSign: Boolean = false): String {
     return if (value == null) "N/A"
-    else when (units) {
-        Units.METRIC -> "%.1f %s".format(value.inKilograms, bigMassUnits(units))
-        Units.IMPERIAL -> "%.1f %s".format(value.inPounds, bigMassUnits(units))
+    else {
+        val format = if (showSign) "%+.1f %s" else "%.1f %s"
+        when (units) {
+            Units.METRIC -> format.format(value.inKilograms, bigMassUnits(units))
+            Units.IMPERIAL -> format.format(value.inPounds, bigMassUnits(units))
+        }
     }
 }
 

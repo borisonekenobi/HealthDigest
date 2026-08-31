@@ -14,7 +14,7 @@ data class BodyMetrics(
         return """
             Current Weight: ${convertBig(currentWeight, units)}
             Previous Weight: ${convertBig(previousWeight, units)}
-            Weight Change: ${convertBig(weightChange, units)}
+            Weight Change: ${convertBig(weightChange, units, showSign = true)}
             Clothes/Waist Fit: ${waistFit?.name ?: "N/A"}"""
     }
 }
