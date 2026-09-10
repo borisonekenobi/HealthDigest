@@ -32,8 +32,8 @@ fun convert(value: Energy?): String {
 fun convert(value: Volume?, units: Units): String {
     return if (value == null) "N/A"
     else when (units) {
-        Units.METRIC -> "%.2f %s".format(value.inMilliliters, volumeUnits(units))
-        Units.IMPERIAL -> "%.2f %s".format(value.inFluidOuncesUs, volumeUnits(units))
+        Units.METRIC -> "%.0f %s".format(value.inMilliliters, volumeUnits(units))
+        Units.IMPERIAL -> "%.0f %s".format(value.inFluidOuncesUs, volumeUnits(units))
     }
 }
 

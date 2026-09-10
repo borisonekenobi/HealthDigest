@@ -39,16 +39,34 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.HeightRecord
+import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.request.ReadRecordsRequest
+import androidx.health.connect.client.time.TimeRangeFilter
+import androidx.health.connect.client.units.Length
+import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.fluidOuncesUs
 import androidx.health.connect.client.units.grams
+import androidx.health.connect.client.units.kilocalories
 import androidx.health.connect.client.units.milliliters
 import androidx.health.connect.client.units.ounces
+import com.borisonekenobi.healthdigest.HealthConnectManager
 import com.borisonekenobi.healthdigest.R
 import com.borisonekenobi.healthdigest.data.DataStoreSource
+import com.borisonekenobi.healthdigest.data.HealthConnectPermissions
 import com.borisonekenobi.healthdigest.data.PreferenceKeys
+import com.borisonekenobi.healthdigest.data.recommendedCarbs
+import com.borisonekenobi.healthdigest.data.recommendedEnergy
+import com.borisonekenobi.healthdigest.data.recommendedFat
+import com.borisonekenobi.healthdigest.data.recommendedProtein
+import com.borisonekenobi.healthdigest.data.recommendedWater
 import com.borisonekenobi.healthdigest.model.settings.Range
 import com.borisonekenobi.healthdigest.model.energyUnits
+import com.borisonekenobi.healthdigest.model.settings.ActivityLevel
 import com.borisonekenobi.healthdigest.model.settings.GoalPreferences
+import com.borisonekenobi.healthdigest.model.settings.PersonalInformation
+import com.borisonekenobi.healthdigest.model.settings.Sex
 import com.borisonekenobi.healthdigest.model.settings.SystemPreferences
 import com.borisonekenobi.healthdigest.model.settings.Theme
 import com.borisonekenobi.healthdigest.model.settings.Units
@@ -58,7 +76,10 @@ import com.borisonekenobi.healthdigest.model.volumeUnits
 import com.borisonekenobi.healthdigest.ui.components.GoalNumberField
 import com.borisonekenobi.healthdigest.ui.components.ToggleButton
 import kotlinx.coroutines.launch
-import java.util.Locale
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.Period
+import kotlin.math.round
 
 @Composable
 fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
@@ -81,6 +102,8 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
     val systemPreferences = systemPreferencesNullable ?: SystemPreferences(
         Theme.SYSTEM, Units.METRIC
     )
+    val personalInformationNullable by dataStoreSource.personalInformationFlow.collectAsState(initial = null)
+    val personalInformation = personalInformationNullable ?: PersonalInformation(null, null)
 
     var weightGoal by remember { mutableStateOf(WeightGoal.MAINTAIN) }
     var autoNutritionGoals by remember { mutableStateOf(false) }
@@ -94,18 +117,88 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
 
     var lastInitializedUnits by remember { mutableStateOf<Units?>(null) }
 
-    val autoCalorieRange = remember { Range("2000", "2500") }
-    val autoProteinRange = remember(systemPreferences.units) {
-        if (systemPreferences.units == Units.METRIC) Range("150", "200") else Range("5.3", "7.1")
+    val healthConnectManager = remember { HealthConnectManager(context) }
+    val healthConnectPermissions = remember { HealthConnectPermissions(context) }
+    var currentWeight by remember { mutableStateOf<Mass?>(null) }
+    var currentHeight by remember { mutableStateOf<Length?>(null) }
+
+    LaunchedEffect(Unit) {
+        try {
+            val granted = healthConnectPermissions.checkPermissions()
+            if (granted.contains(HealthPermission.getReadPermission(WeightRecord::class))) {
+                val weightResponse = healthConnectManager.client.readRecords(
+                    ReadRecordsRequest(
+                        recordType = WeightRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(LocalDateTime.now().minusYears(5), LocalDateTime.now())
+                    )
+                )
+                currentWeight = weightResponse.records.lastOrNull()?.weight
+            }
+            if (granted.contains(HealthPermission.getReadPermission(HeightRecord::class))) {
+                val heightResponse = healthConnectManager.client.readRecords(
+                    androidx.health.connect.client.request.ReadRecordsRequest(
+                        recordType = HeightRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(LocalDateTime.now().minusYears(5), LocalDateTime.now())
+                    )
+                )
+                currentHeight = heightResponse.records.lastOrNull()?.height
+            }
+        } catch (_: Exception) {}
     }
-    val autoCarbsRange = remember(systemPreferences.units) {
-        if (systemPreferences.units == Units.METRIC) Range("250", "300") else Range("8.8", "10.6")
+
+    fun formatDouble(d: Double?): String =
+        d?.let {
+            if (it == 0.0) ""
+            else round(it).toInt().toString()
+        } ?: ""
+
+    val w = currentWeight ?: Mass.kilograms(70.0)
+    val h = currentHeight ?: Length.meters(1.75)
+    val s = personalInformation.sex ?: Sex.MALE
+    val age = personalInformation.birthDate?.let { Period.between(it, LocalDate.now()).years } ?: 30
+    val al = ActivityLevel.MODERATE
+
+    val energyRange = recommendedEnergy(s, w, h, age, al, weightGoal)
+    val proteinRangeObj = recommendedProtein(w)
+    
+    val basalMetabolicRate = when (s) {
+        Sex.MALE -> 10 * w.inKilograms + 6.25 * (h.inMeters * 100) - 5 * age + 5
+        Sex.FEMALE -> 10 * w.inKilograms + 6.25 * (h.inMeters * 100) - 5 * age - 161
     }
-    val autoFatRange = remember(systemPreferences.units) {
-        if (systemPreferences.units == Units.METRIC) Range("60", "80") else Range("2.1", "2.8")
+    val totalDailyEnergyExpenditure = basalMetabolicRate * al.value
+    val targetEnergy = (totalDailyEnergyExpenditure + weightGoal.value.inKilocalories).kilocalories
+    
+    val fatRangeObj = recommendedFat(targetEnergy)
+    val carbsRangeObj = recommendedCarbs(targetEnergy, proteinRangeObj, fatRangeObj)
+
+    val autoCalorieRange = remember(energyRange) {
+        Range(
+            formatDouble(energyRange?.lowerBound?.inKilocalories),
+            formatDouble(energyRange?.upperBound?.inKilocalories)
+        )
     }
-    val autoWaterGoal = remember(systemPreferences.units) {
-        if (systemPreferences.units == Units.METRIC) "2500" else "84.5"
+    val autoProteinRange = remember(proteinRangeObj, systemPreferences.units) {
+        Range(
+            formatDouble(if (systemPreferences.units == Units.METRIC) proteinRangeObj.lowerBound?.inGrams else proteinRangeObj.lowerBound?.inOunces),
+            formatDouble(if (systemPreferences.units == Units.METRIC) proteinRangeObj.upperBound?.inGrams else proteinRangeObj.upperBound?.inOunces)
+        )
+    }
+    val autoCarbsRange = remember(carbsRangeObj, systemPreferences.units) {
+        Range(
+            formatDouble(if (systemPreferences.units == Units.METRIC) carbsRangeObj.lowerBound?.inGrams else carbsRangeObj.lowerBound?.inOunces),
+            formatDouble(if (systemPreferences.units == Units.METRIC) carbsRangeObj.upperBound?.inGrams else carbsRangeObj.upperBound?.inOunces)
+        )
+    }
+    val autoFatRange = remember(fatRangeObj, systemPreferences.units) {
+        Range(
+            formatDouble(if (systemPreferences.units == Units.METRIC) fatRangeObj.lowerBound?.inGrams else fatRangeObj.lowerBound?.inOunces),
+            formatDouble(if (systemPreferences.units == Units.METRIC) fatRangeObj.upperBound?.inGrams else fatRangeObj.upperBound?.inOunces)
+        )
+    }
+    val waterGoalObj = recommendedWater(s)
+
+    val autoWaterGoal = remember(waterGoalObj, systemPreferences.units) {
+        formatDouble(if (systemPreferences.units == Units.METRIC) waterGoalObj?.inMilliliters else waterGoalObj?.inFluidOuncesUs)
     }
 
     fun isValidNumberInput(value: String): Boolean {
@@ -113,17 +206,10 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
         else value.substringAfter('.', "").length <= 2
     }
 
-    LaunchedEffect(goalPreferencesNullable, goalPreferences) {
+    LaunchedEffect(goalPreferencesNullable) {
         val prefs = goalPreferencesNullable
-        if (prefs != null && lastInitializedUnits != systemPreferences.units) {
+        if (prefs != null) {
             val units = systemPreferences.units
-
-            fun formatDouble(d: Double?): String =
-                d?.let {
-                    if (it == 0.0) ""
-                    else if (it % 1.0 == 0.0) it.toInt().toString()
-                    else "%.2f".format(Locale.US, it).trimEnd('0').trimEnd('.')
-                } ?: ""
 
             weightGoal = prefs.weightGoal
             calorieRange = Range(
@@ -158,7 +244,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                 formatDouble(if (units == Units.METRIC) it.inMilliliters else it.inFluidOuncesUs)
             } ?: ""
 
-            if (lastInitializedUnits == null) {
+            if (lastInitializedUnits == null || lastInitializedUnits != units) {
                 autoNutritionGoals = prefs.autoNutritionGoals
                 autoHydrationGoals = prefs.autoHydrationGoals
             }
@@ -177,7 +263,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
         Text(stringResource(R.string.weight_goal))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
         ) {
             val weightGoals = WeightGoal.entries
             weightGoals.forEachIndexed { index, weightGoal ->
@@ -203,7 +289,7 @@ fun GoalPreferencesScreen(modifier: Modifier = Modifier) {
                         contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                     ),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    contentPadding = PaddingValues(0.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp),
                 ) {
                     Text(text = weightGoal.name.lowercase().replaceFirstChar { it.uppercase() }
                         .replace("_", " "),
