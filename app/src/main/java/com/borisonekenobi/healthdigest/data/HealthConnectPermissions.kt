@@ -28,6 +28,7 @@ class HealthConnectPermissions(context: Context) : HealthPermissions {
         HealthPermission.getReadPermission(SleepSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
+        HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY,
     )
 
     override fun getPermissions(launcher: ActivityResultLauncher<Set<String>>) {

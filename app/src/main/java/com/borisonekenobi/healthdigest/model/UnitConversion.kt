@@ -1,6 +1,7 @@
 package com.borisonekenobi.healthdigest.model
 
 import androidx.health.connect.client.units.Energy
+import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Volume
 import com.borisonekenobi.healthdigest.model.settings.Units
@@ -37,6 +38,14 @@ fun convert(value: Volume?, units: Units): String {
     }
 }
 
+fun convert(value: Length?, units: Units): String {
+    return if (value == null) "N/A"
+    else when (units) {
+        Units.METRIC -> "%.0f %s".format(value.inMeters * 100, lengthUnits(units))
+        Units.IMPERIAL -> "%.0f %s".format(value.inInches, lengthUnits(units))
+    }
+}
+
 fun bigMassUnits(units: Units): String {
     return when (units) {
         Units.METRIC -> "kg"
@@ -59,5 +68,12 @@ fun volumeUnits(units: Units): String {
     return when (units) {
         Units.METRIC -> "mL"
         Units.IMPERIAL -> "fl oz"
+    }
+}
+
+fun lengthUnits(units: Units): String {
+    return when (units) {
+        Units.METRIC -> "cm"
+        Units.IMPERIAL -> "in"
     }
 }

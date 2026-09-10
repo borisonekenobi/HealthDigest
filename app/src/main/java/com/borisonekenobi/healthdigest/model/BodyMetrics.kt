@@ -1,9 +1,11 @@
 package com.borisonekenobi.healthdigest.model
 
+import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
 import com.borisonekenobi.healthdigest.model.settings.Units
 
 data class BodyMetrics(
+    val height: Length?,
     val currentWeight: Mass?,
     val previousWeight: Mass?,
     val weightChange: Mass?,
@@ -12,6 +14,7 @@ data class BodyMetrics(
 ) {
     override fun toString(): String {
         return """
+            Height: ${convert(height, units)}
             Current Weight: ${convertBig(currentWeight, units)}
             Previous Weight: ${convertBig(previousWeight, units)}
             Weight Change: ${convertBig(weightChange, units, showSign = true)}

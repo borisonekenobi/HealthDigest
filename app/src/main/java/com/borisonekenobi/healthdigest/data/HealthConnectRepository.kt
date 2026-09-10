@@ -51,10 +51,12 @@ class HealthConnectRepository(private val context: Context) : HealthRepository {
                     val heightResponse = healthConnectManager.client.readRecords(
                         androidx.health.connect.client.request.ReadRecordsRequest(
                             recordType = HeightRecord::class,
-                            timeRangeFilter = TimeRangeFilter.between(LocalDateTime.now().minusYears(5), LocalDateTime.now())
+                            timeRangeFilter = TimeRangeFilter.after(LocalDateTime.now().minusYears(100)),
+                            ascendingOrder = false,
+                            pageSize = 1
                         )
                     )
-                    height = heightResponse.records.lastOrNull()?.height
+                    height = heightResponse.records.firstOrNull()?.height
                 }
             } catch (_: Exception) {}
             

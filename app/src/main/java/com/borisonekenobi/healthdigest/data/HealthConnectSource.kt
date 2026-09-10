@@ -6,6 +6,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.Record
@@ -16,6 +17,8 @@ import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
+import androidx.health.connect.client.units.Length
+import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.grams
 import androidx.health.connect.client.units.kilocalories
 import androidx.health.connect.client.units.kilograms
@@ -44,32 +47,58 @@ class HealthConnectSource(context: Context, private val units: Units) {
     private val lastLastWeek = today.minusDays(14)
 
     suspend fun getBodyInformation(waistFit: WaistFit): BodyMetrics {
-        if (!hasPermissions(setOf(WeightRecord::class))) {
+        val hasWeightPermission = hasPermissions(setOf(WeightRecord::class))
+        val hasHeightPermission = hasPermissions(setOf(HeightRecord::class))
+
+        if (!hasWeightPermission && !hasHeightPermission) {
             return BodyMetrics(
-                null, null, null, null, units
+                null, null, null, null, null, units
             )
         }
 
-        val currentWeightResponse = healthConnectManager.client.readRecords(
-            ReadRecordsRequest(
-                recordType = WeightRecord::class,
-                timeRangeFilter = TimeRangeFilter.after(today),
-            )
-        )
-        val currentWeight = currentWeightResponse.records.lastOrNull()?.weight
+        var currentWeight: Mass? = null
+        var previousWeight: Mass? = null
+        var weightChange: Mass? = null
+        var height: Length? = null
 
-        val previousWeightResponse = healthConnectManager.client.readRecords(
-            ReadRecordsRequest(
-                recordType = WeightRecord::class,
-                timeRangeFilter = TimeRangeFilter.between(lastLastWeek, today),
+        if (hasWeightPermission) {
+            val currentWeightResponse = healthConnectManager.client.readRecords(
+                ReadRecordsRequest(
+                    recordType = WeightRecord::class,
+                    timeRangeFilter = TimeRangeFilter.after(today),
+                )
             )
-        )
-        val previousWeight = previousWeightResponse.records.lastOrNull()?.weight
+            currentWeight = currentWeightResponse.records.lastOrNull()?.weight
 
-        val weightChange = if (currentWeight == null || previousWeight == null) null
-        else (currentWeight.inKilograms - previousWeight.inKilograms).kilograms
+            val previousWeightResponse = healthConnectManager.client.readRecords(
+                ReadRecordsRequest(
+                    recordType = WeightRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(lastLastWeek, today),
+                )
+            )
+            previousWeight = previousWeightResponse.records.lastOrNull()?.weight
+
+            weightChange = if (currentWeight == null || previousWeight == null) null
+            else (currentWeight.inKilograms - previousWeight.inKilograms).kilograms
+        }
+
+        if (hasHeightPermission) {
+            try {
+                val heightResponse = healthConnectManager.client.readRecords(
+                    ReadRecordsRequest(
+                        recordType = HeightRecord::class,
+                        timeRangeFilter = TimeRangeFilter.after(now.minusYears(100)),
+                        ascendingOrder = false,
+                        pageSize = 1
+                    )
+                )
+                height = heightResponse.records.firstOrNull()?.height
+            } catch (_: Exception) {
+            }
+        }
 
         return BodyMetrics(
+            height = height,
             currentWeight = currentWeight,
             previousWeight = previousWeight,
             weightChange = weightChange,
