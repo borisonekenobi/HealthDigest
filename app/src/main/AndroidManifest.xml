@@ -30,6 +30,9 @@
         android:name="android.permission.health.READ_HEART_RATE"
         tools:ignore="HealthConnectPolicy" />
     <uses-permission
+        android:name="android.permission.health.READ_RESTING_HEART_RATE"
+        tools:ignore="HealthConnectPolicy" />
+    <uses-permission
         android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND"
         tools:ignore="HealthConnectPolicy" />
 

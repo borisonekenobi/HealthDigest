@@ -1,6 +1,7 @@
 package com.borisonekenobi.healthdigest.data
 
 import android.content.Context
+import androidx.health.connect.client.aggregate.AggregateMetric
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
@@ -8,6 +9,7 @@ import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.Record
+import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
@@ -203,38 +205,49 @@ class HealthConnectSource(context: Context, private val units: Units) {
     }
 
     suspend fun getRecoveryInformation(): Recovery {
-        if (!hasPermissions(
-                setOf(
-                    SleepSessionRecord::class, HeartRateRecord::class
-                )
-            )
-        ) return Recovery(null, null)
+        val permissions = mutableSetOf<AggregateMetric<*>>()
+        if (hasPermissions(setOf(SleepSessionRecord::class))) {
+            permissions.add(SleepSessionRecord.SLEEP_DURATION_TOTAL)
+        }
+        if (hasPermissions(setOf(HeartRateRecord::class))) {
+            permissions.add(HeartRateRecord.BPM_AVG)
+        }
+        if (hasPermissions(setOf(RestingHeartRateRecord::class))) {
+            permissions.add(RestingHeartRateRecord.BPM_AVG)
+        }
+
+        if (permissions.isEmpty()) return Recovery(null, null, null)
 
         val response = healthConnectManager.client.aggregateGroupByPeriod(
             AggregateGroupByPeriodRequest(
-                metrics = setOf(
-                    SleepSessionRecord.SLEEP_DURATION_TOTAL,
-                    HeartRateRecord.BPM_AVG,
-                ),
+                metrics = permissions,
                 timeRangeFilter = TimeRangeFilter.between(lastWeek, today),
                 timeRangeSlicer = Period.ofDays(1),
             )
         )
 
         if (response.isEmpty()) {
-            return Recovery(null, null)
+            return Recovery(null, null, null)
         }
 
         val totalSleep = response.sumOf {
             it.result[SleepSessionRecord.SLEEP_DURATION_TOTAL]?.toMinutes() ?: 0
         }
-        val averageSleep = (totalSleep / response.size).minutes
+        val averageSleep =
+            if (permissions.contains(SleepSessionRecord.SLEEP_DURATION_TOTAL)) (totalSleep / response.size).minutes else null
         val averageHeartRate =
-            response.sumOf { it.result[HeartRateRecord.BPM_AVG] ?: 0 } / response.size
+            if (permissions.contains(HeartRateRecord.BPM_AVG)) response.sumOf {
+                it.result[HeartRateRecord.BPM_AVG] ?: 0
+            } / response.size else null
+        val restingHeartRate =
+            if (permissions.contains(RestingHeartRateRecord.BPM_AVG)) response.sumOf {
+                it.result[RestingHeartRateRecord.BPM_AVG] ?: 0
+            } / response.size else null
 
         return Recovery(
             averageSleep = averageSleep,
             averageHeartRate = averageHeartRate,
+            restingHeartRate = restingHeartRate,
         )
     }
 

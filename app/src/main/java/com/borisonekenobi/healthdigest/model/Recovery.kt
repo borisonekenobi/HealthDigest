@@ -6,6 +6,7 @@ import kotlin.time.Duration
 data class Recovery(
     val averageSleep: Duration?,
     val averageHeartRate: Long?,
+    val restingHeartRate: Long?,
 ) {
     @SuppressLint("DefaultLocale")
     override fun toString(): String {
@@ -15,6 +16,7 @@ data class Recovery(
 
         return """
             Average Sleep: ${averageSleep ?: "N/A"}
-            Average Heart Rate: ${averageHeartRate ?: "N/A"} bpm"""
+            Average Heart Rate: ${averageHeartRate ?: "N/A"} bpm
+            Resting Heart Rate: ${restingHeartRate ?: "N/A"} bpm"""
     }
 }
